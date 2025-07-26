@@ -19,6 +19,10 @@
             min-height: 100vh;
             color: #333;
         }
+        
+        body.modal-open {
+            overflow: hidden;
+        }
 
         .container {
             max-width: 1400px;
@@ -206,6 +210,22 @@
             font-size: 12px;
             font-weight: bold;
         }
+        
+        .appointment-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .edit-appointment-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #6c757d;
+        }
+        .edit-appointment-btn:hover {
+            color: #667eea;
+        }
 
         .status-confirmed { background: #d4edda; color: #155724; }
         .status-pending { background: #fff3cd; color: #856404; }
@@ -306,7 +326,9 @@
             align-items: center;
         }
         
-        .modal.active { display: flex; }
+        .modal.show { 
+            display: flex; 
+        }
 
         .modal-content {
             background: white;
@@ -317,7 +339,7 @@
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
         }
 
-        .modal h3 {
+        .modal-title, .modal h3 {
             color: #667eea;
             margin-bottom: 20px;
         }
@@ -375,7 +397,6 @@
             position: fixed;
             top: 20px;
             right: 20px;
-            background: #28a745;
             color: white;
             padding: 15px 20px;
             border-radius: 10px;
@@ -386,11 +407,14 @@
             transition: transform 0.5s ease-in-out;
         }
         
-        .notification.show { transform: translateX(0); }
+        .notification.show { transform: translateX(0); display: block; }
+        .notification.success { background: #28a745; }
+        .notification.error { background: #dc3545; }
+
 
         .chart-container {
             position: relative;
-            height: 40vh;
+            height: 60vh;
             width: 100%;
         }
 
@@ -466,16 +490,16 @@
                 <section id="dashboard-section" class="content-section active">
                     <div class="dashboard-grid">
                         <div class="stats-card">
-                            <div class="stats-number" id="today-app-count">0</div>
+                            <div class="stats-number">0</div>
                             <div class="stats-label">Appuntamenti Oggi</div>
                         </div>
                         <div class="stats-card">
-                            <div class="stats-number" id="today-revenue">€0</div>
+                            <div class="stats-number">€0.00</div>
                             <div class="stats-label">Incasso Giornaliero</div>
                         </div>
                         <div class="quick-actions">
-                             <h3>Azioni Rapide</h3>
-                            <button class="action-btn new-appointment-btn">
+                            <h3>Azioni Rapide</h3>
+                            <button id="newAppointmentBtn" class="action-btn">
                                 <i data-lucide="plus"></i> Nuovo Appuntamento
                             </button>
                             <button class="action-btn" id="showNewClientModalBtn">
@@ -495,9 +519,6 @@
                         <div class="calendar-nav">
                             <button id="prevMonthBtn"><i data-lucide="chevron-left"></i></button>
                             <button id="nextMonthBtn"><i data-lucide="chevron-right"></i></button>
-                            <button class="action-btn new-appointment-btn">
-                                <i data-lucide="plus"></i> Nuovo Appuntamento
-                            </button>
                         </div>
                     </div>
                     <div class="calendar-grid calendar-days">
@@ -513,8 +534,8 @@
                 </section>
     
                 <section id="clients-section" class="content-section">
-                    <h2>Gestione Clienti</h2>
-                    <p>Funzionalità di gestione clienti in arrivo...</p>
+                    <h2>Clienti Recenti</h2>
+                    <div id="clients-list"></div>
                 </section>
     
                 <section id="services-section" class="content-section">
@@ -525,7 +546,6 @@
                 <section id="reports-section" class="content-section">
                     <h2>Report e Statistiche</h2>
                     <div class="chart-container">
-                        <h3>Incassi Mensili (Ultimi 6 Mesi)</h3>
                         <canvas id="revenueChart"></canvas>
                     </div>
                 </section>
@@ -540,7 +560,7 @@
 
     <div class="modal" id="newAppointmentModal">
         <div class="modal-content">
-            <h3>Nuovo Appuntamento</h3>
+            <h3 class="modal-title">Nuovo Appuntamento</h3>
             <form id="appointmentForm">
                 <div class="form-group">
                     <label for="clientSelect">Cliente</label>
@@ -552,6 +572,11 @@
                     <label for="serviceSelect">Servizio</label>
                     <select id="serviceSelect" required>
                         <option value="">Seleziona servizio</option>
+                        <option value="Taglio e Piega">Taglio e Piega</option>
+                        <option value="Piega">Piega</option>
+                        <option value="Colore">Colore</option>
+                        <option value="Barba e Baffi">Barba e Baffi</option>
+                        <option value="Trattamento Viso">Trattamento Viso</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -611,351 +636,521 @@
     </div>
 
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // --- DATA ---
-        let appointments = [
-            { id: 1, clientId: 1, serviceId: 1, date: '2025-07-26', time: '09:00', status: 'confirmed', notes: '' },
-            { id: 2, clientId: 2, serviceId: 4, date: '2025-07-26', time: '10:30', status: 'pending', notes: '' },
-            { id: 3, clientId: 3, serviceId: 5, date: '2025-07-26', time: '14:00', status: 'confirmed', notes: 'Primo appuntamento' },
-            { id: 4, clientId: 1, serviceId: 2, date: '2025-07-28', time: '11:00', status: 'confirmed', notes: '' },
-        ];
+        'use strict';
 
-        let clients = [
-            { id: 1, name: 'Maria', surname: 'Bianchi', phone: '333-1234567', email: 'maria@email.com' },
-            { id: 2, name: 'Luigi', surname: 'Verdi', phone: '333-9876543', email: 'luigi@email.com' },
-            { id: 3, name: 'Anna', surname: 'Neri', phone: '333-5555555', email: 'anna@email.com' }
-        ];
-        
-        let services = [
-            { id: 1, name: 'Taglio e Piega', price: 45 },
-            { id: 2, name: 'Piega', price: 20 },
-            { id: 3, name: 'Colore', price: 60 },
-            { id: 4, name: 'Barba e Baffi', price: 15 },
-            { id: 5, name: 'Trattamento Viso', price: 40 }
-        ];
+        document.addEventListener('DOMContentLoaded', () => {
 
-        // --- STATE ---
-        let currentDate = new Date();
-        let selectedDate = new Date();
-        
-        // --- SELECTORS ---
-        const mainNav = document.getElementById('main-nav');
-        const contentSections = document.querySelectorAll('.content-section');
-        const newAppointmentModal = document.getElementById('newAppointmentModal');
-        const newClientModal = document.getElementById('newClientModal');
-        const appointmentForm = document.getElementById('appointmentForm');
-        const clientForm = document.getElementById('clientForm');
-
-        // --- INITIALIZATION ---
-        lucide.createIcons();
-        initApp();
-
-        function initApp() {
-            setupEventListeners();
-            populateSelectOptions();
-            updateDashboard();
-            renderCalendar();
-            renderRevenueChart();
-        }
-
-        // --- EVENT LISTENERS ---
-        function setupEventListeners() {
-            mainNav.addEventListener('click', handleNavClick);
-            
-            document.querySelectorAll('.new-appointment-btn').forEach(btn => btn.addEventListener('click', () => showModal('newAppointment')));
-            document.getElementById('showNewClientModalBtn').addEventListener('click', () => showModal('newClient'));
-            
-            document.getElementById('cancelAppointmentBtn').addEventListener('click', () => hideModal('newAppointment'));
-            document.getElementById('cancelClientBtn').addEventListener('click', () => hideModal('newClient'));
-
-            newAppointmentModal.addEventListener('click', (e) => { if(e.target === newAppointmentModal) hideModal('newAppointment'); });
-            newClientModal.addEventListener('click', (e) => { if(e.target === newClientModal) hideModal('newClient'); });
-
-            appointmentForm.addEventListener('submit', handleNewAppointment);
-            clientForm.addEventListener('submit', handleNewClient);
-
-            document.getElementById('prevMonthBtn').addEventListener('click', showPreviousMonth);
-            document.getElementById('nextMonthBtn').addEventListener('click', showNextMonth);
-            
-            document.getElementById('calendar-dates').addEventListener('click', handleDateClick);
-        }
-
-        // --- NAVIGATION ---
-        function handleNavClick(e) {
-            const navItem = e.target.closest('.nav-item');
-            if (!navItem) return;
-
-            const sectionId = navItem.dataset.section;
-            showSection(sectionId);
-
-            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-            navItem.classList.add('active');
-        }
-
-        function showSection(sectionId) {
-            contentSections.forEach(section => {
-                section.classList.toggle('active', section.id === `${sectionId}-section`);
-            });
-        }
-
-        // --- DASHBOARD ---
-        function updateDashboard() {
-            const todayStr = new Date().toISOString().split('T')[0];
-            const todayAppointments = appointments.filter(app => app.date === todayStr);
-
-            document.getElementById('today-app-count').textContent = todayAppointments.length;
-            
-            const todayRevenue = todayAppointments.reduce((sum, app) => {
-                const service = services.find(s => s.id === app.serviceId);
-                return sum + (service ? service.price : 0);
-            }, 0);
-            document.getElementById('today-revenue').textContent = `€${todayRevenue}`;
-            
-            renderAppointmentsList(todayAppointments, document.getElementById('appointments-list'), 'Nessun appuntamento per oggi.');
-        }
-
-        // --- CALENDAR ---
-        function renderCalendar() {
-            const calendarDates = document.getElementById('calendar-dates');
-            const month = currentDate.getMonth();
-            const year = currentDate.getFullYear();
-            
-            document.getElementById('currentMonthYear').textContent = `${currentDate.toLocaleString('it-IT', { month: 'long' })} ${year}`;
-            
-            calendarDates.innerHTML = '';
-            
-            const firstDayOfMonth = new Date(year, month, 1).getDay();
-            const lastDateOfMonth = new Date(year, month + 1, 0).getDate();
-
-            // Adjust for Monday-first week
-            const dayOffset = (firstDayOfMonth === 0) ? 6 : firstDayOfMonth - 1;
-
-            for (let i = 0; i < dayOffset; i++) {
-                calendarDates.appendChild(document.createElement('div'));
-            }
-
-            for (let i = 1; i <= lastDateOfMonth; i++) {
-                const dateEl = document.createElement('div');
-                dateEl.className = 'calendar-date';
-                dateEl.textContent = i;
-                dateEl.dataset.date = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
-                
-                const thisDate = new Date(year, month, i);
-                if (thisDate.toDateString() === new Date().toDateString()) {
-                    dateEl.classList.add('today');
-                }
-                if (thisDate.toDateString() === selectedDate.toDateString()) {
-                    dateEl.classList.add('selected');
-                }
-
-                const appointmentsOnDate = appointments.filter(app => app.date === dateEl.dataset.date);
-                if (appointmentsOnDate.length > 0) {
-                    const indicator = document.createElement('div');
-                    indicator.className = 'appointment-indicator';
-                    dateEl.appendChild(indicator);
-                }
-
-                calendarDates.appendChild(dateEl);
-            }
-             updateSelectedDayAppointments();
-        }
-
-        function handleDateClick(e) {
-            const dateEl = e.target.closest('.calendar-date');
-            if (!dateEl || !dateEl.dataset.date) return;
-
-            selectedDate = new Date(dateEl.dataset.date + 'T00:00:00');
-            renderCalendar();
-        }
-        
-        function updateSelectedDayAppointments() {
-             const selectedDateStr = selectedDate.toISOString().split('T')[0];
-             const selectedDayAppointments = appointments.filter(app => app.date === selectedDateStr);
-             
-             document.getElementById('selectedDayAppointmentsTitle').textContent = `Appuntamenti del ${selectedDate.toLocaleDateString('it-IT')}`;
-             renderAppointmentsList(selectedDayAppointments, document.getElementById('selectedDayAppointmentsList'), 'Nessun appuntamento per questo giorno.');
-        }
-
-        function showPreviousMonth() {
-            currentDate.setMonth(currentDate.getMonth() - 1);
-            renderCalendar();
-        }
-
-        function showNextMonth() {
-            currentDate.setMonth(currentDate.getMonth() + 1);
-            renderCalendar();
-        }
-
-        // --- MODALS & FORMS ---
-        function showModal(modalName) {
-            const modal = document.getElementById(`${modalName}Modal`);
-            if (!modal) return;
-            
-            if (modalName === 'newAppointment') {
-                document.getElementById('appointmentDate').value = selectedDate.toISOString().split('T')[0];
-            }
-            modal.classList.add('active');
-        }
-
-        function hideModal(modalName) {
-            const modal = document.getElementById(`${modalName}Modal`);
-            if (modal) {
-                modal.classList.remove('active');
-            }
-        }
-
-        function populateSelectOptions() {
-            const clientSelect = document.getElementById('clientSelect');
-            clientSelect.innerHTML = '<option value="">Seleziona cliente</option>';
-            clients.forEach(c => {
-                const option = document.createElement('option');
-                option.value = c.id;
-                option.textContent = `${c.name} ${c.surname}`;
-                clientSelect.appendChild(option);
-            });
-
-            const serviceSelect = document.getElementById('serviceSelect');
-            serviceSelect.innerHTML = '<option value="">Seleziona servizio</option>';
-            services.forEach(s => {
-                const option = document.createElement('option');
-                option.value = s.id;
-                option.textContent = `${s.name} (€${s.price})`;
-                serviceSelect.appendChild(option);
-            });
-        }
-
-        function handleNewAppointment(e) {
-            e.preventDefault();
-            const newAppointment = {
-                id: appointments.length + 1,
-                clientId: parseInt(appointmentForm.clientSelect.value),
-                serviceId: parseInt(appointmentForm.serviceSelect.value),
-                date: appointmentForm.appointmentDate.value,
-                time: appointmentForm.appointmentTime.value,
-                status: 'confirmed',
-                notes: appointmentForm.appointmentNotes.value,
-            };
-
-            appointments.push(newAppointment);
-            
-            hideModal('newAppointment');
-            appointmentForm.reset();
-            showNotification('Appuntamento creato con successo!');
-            
-            updateDashboard();
-            renderCalendar();
-        }
-
-        function handleNewClient(e) {
-            e.preventDefault();
-            const newClient = {
-                id: clients.length + 1,
-                name: clientForm.clientName.value,
-                surname: clientForm.clientSurname.value,
-                phone: clientForm.clientPhone.value,
-                email: clientForm.clientEmail.value,
-            };
-            
-            clients.push(newClient);
-
-            hideModal('newClient');
-            clientForm.reset();
-            showNotification('Cliente aggiunto con successo!');
-            
-            populateSelectOptions();
-        }
-
-        // --- RENDERING HELPERS ---
-        function renderAppointmentsList(appointmentsToRender, container, emptyMessage) {
-            container.innerHTML = '';
-            if (appointmentsToRender.length === 0) {
-                container.innerHTML = `<p>${emptyMessage}</p>`;
-                return;
-            }
-
-            appointmentsToRender.sort((a, b) => a.time.localeCompare(b.time));
-
-            appointmentsToRender.forEach(app => {
-                const client = clients.find(c => c.id === app.clientId);
-                const service = services.find(s => s.id === app.serviceId);
-                
-                if (!client || !service) return;
-
-                const item = document.createElement('div');
-                item.className = 'appointment-item';
-                item.innerHTML = `
-                    <div class="appointment-info">
-                        <h4>${client.name} ${client.surname}</h4>
-                        <p>${app.time} - ${service.name}</p>
-                    </div>
-                    <span class="appointment-status status-${app.status}">${app.status === 'confirmed' ? 'Confermato' : 'In Attesa'}</span>
-                `;
-                container.appendChild(item);
-            });
-        }
-
-        // --- CHART ---
-        function renderRevenueChart() {
-            const ctx = document.getElementById('revenueChart').getContext('2d');
-            const labels = [];
-            const data = [];
-            
-            for (let i = 5; i >= 0; i--) {
-                const d = new Date();
-                d.setMonth(d.getMonth() - i);
-                labels.push(d.toLocaleString('it-IT', { month: 'long' }));
-                
-                // Dummy data for chart
-                data.push(Math.floor(Math.random() * (5000 - 2000 + 1) + 2000));
-            }
-
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Incasso Mensile',
-                        data: data,
-                        backgroundColor: 'rgba(102, 126, 234, 0.8)',
-                        borderColor: 'rgba(102, 126, 234, 1)',
-                        borderWidth: 1,
-                        borderRadius: 5
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: function(value) {
-                                    return '€' + value;
-                                }
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    }
-                }
-            });
-        }
-
-        // --- UTILS ---
-        function showNotification(message) {
+            // --- DOM ELEMENT SELECTIONS ---
+            const newAppointmentModal = document.getElementById('newAppointmentModal');
+            const newClientModal = document.getElementById('newClientModal');
+            const appointmentForm = document.getElementById('appointmentForm');
+            const clientForm = document.getElementById('clientForm');
             const notification = document.getElementById('notification');
             const notificationText = document.getElementById('notificationText');
-            notificationText.textContent = message;
-            notification.classList.add('show');
+            const clientSelect = document.getElementById('clientSelect');
+            const serviceSelect = document.getElementById('serviceSelect');
+            const appointmentDateInput = document.getElementById('appointmentDate');
+            const appointmentTimeInput = document.getElementById('appointmentTime');
+            const appointmentNotesInput = document.getElementById('appointmentNotes');
+
+            const clientNameInput = document.getElementById('clientName');
+            const clientSurnameInput = document.getElementById('clientSurname');
+            const clientPhoneInput = document.getElementById('clientPhone');
+            const clientEmailInput = document.getElementById('clientEmail');
+            const clientNotesInput = document.getElementById('clientNotes');
+
+            const appointmentsList = document.getElementById('appointments-list');
+            const clientsList = document.getElementById('clients-list');
+            const calendarDatesContainer = document.getElementById('calendar-dates');
+            const currentMonthYearHeader = document.getElementById('currentMonthYear');
+
+            const todayAppointmentsCount = document.querySelector('#dashboard-section .stats-number');
+            const todayRevenueAmount = document.querySelectorAll('#dashboard-section .stats-number')[1];
+
+            const selectedDayAppointmentsTitle = document.getElementById('selectedDayAppointmentsTitle');
+            const selectedDayAppointmentsList = document.getElementById('selectedDayAppointmentsList');
+
+            const revenueChartCanvas = document.getElementById('revenueChart');
+            let revenueChartInstance = null;
+
+            // Buttons
+            const newAppointmentBtn = document.getElementById('newAppointmentBtn');
+            const cancelAppointmentBtn = document.getElementById('cancelAppointmentBtn');
+            const showNewClientModalBtn = document.getElementById('showNewClientModalBtn');
+            const cancelClientBtn = document.getElementById('cancelClientBtn');
+            const prevMonthBtn = document.getElementById('prevMonthBtn');
+            const nextMonthBtn = document.getElementById('nextMonthBtn');
+
+            const contentSections = document.querySelectorAll('.content-section');
+            const navItems = document.querySelectorAll('#main-nav .nav-item');
+
+            // --- APPLICATION STATE (STATIC DATA) ---
+            const state = {
+                appointments: [
+                    { id: 1, client_id: 1, service: 'Taglio e Piega', appointment_date: '2025-07-26', appointment_time: '09:00', status: 'Confermato', notes: 'Primo appuntamento', name: 'Maria', surname: 'Bianchi', price: 45 },
+                    { id: 2, client_id: 2, service: 'Barba e Baffi', appointment_date: '2025-07-26', appointment_time: '10:30', status: 'In attesa', notes: '', name: 'Luigi', surname: 'Verdi', price: 15 },
+                    { id: 3, client_id: 3, service: 'Colore', appointment_date: '2025-07-28', appointment_time: '14:00', status: 'Confermato', notes: '', name: 'Anna', surname: 'Neri', price: 60 },
+                ],
+                clients: [
+                    { id: 1, name: 'Maria', surname: 'Bianchi', phone: '3331234567'},
+                    { id: 2, name: 'Luigi', surname: 'Verdi', phone: '3339876543'},
+                    { id: 3, name: 'Anna', surname: 'Neri', phone: '3335555555'}
+                ],
+                currentCalendarDate: new Date(),
+                activeSection: 'dashboard',
+                editingAppointment: null
+            };
+
+            // --- API-LIKE FUNCTIONS (using static data) ---
+
+            const fetchClients = async () => {
+                // Simula una chiamata API
+                renderClients();
+                populateClientSelect();
+            };
+
+            const fetchAppointments = async () => {
+                // Simula una chiamata API
+                renderAppointments();
+                renderCalendar();
+                renderAppointmentsForSelectedDay(null);
+            };
             
-            setTimeout(() => {
-                notification.classList.remove('show');
-            }, 3000);
-        }
-    });
+            const fetchDashboardData = async () => {
+                const todayString = new Date().toISOString().split('T')[0];
+                const todayAppointments = state.appointments.filter(app => app.appointment_date === todayString);
+                
+                if (todayAppointmentsCount) {
+                    todayAppointmentsCount.textContent = todayAppointments.length;
+                }
+
+                const revenue = todayAppointments.reduce((acc, curr) => acc + (curr.price || 0), 0);
+                if (todayRevenueAmount) {
+                    todayRevenueAmount.textContent = `€${revenue.toFixed(2)}`;
+                }
+            };
+            
+            const fetchRevenueData = async () => {
+                // Simula dati per il grafico
+                const monthlyRevenueData = [
+                    { month: 'Febbraio', revenue: 2500 }, { month: 'Marzo', revenue: 3200 },
+                    { month: 'Aprile', revenue: 2800 }, { month: 'Maggio', revenue: 4100 },
+                    { month: 'Giugno', revenue: 3800 }, { month: 'Luglio', revenue: 4500 }
+                ];
+                const monthlyAppointmentsData = [
+                    { month: 'Febbraio', count: 50 }, { month: 'Marzo', count: 65 },
+                    { month: 'Aprile', count: 58 }, { month: 'Maggio', count: 80 },
+                    { month: 'Giugno', count: 75 }, { month: 'Luglio', count: 90 }
+                ];
+                renderRevenueChart(monthlyRevenueData, monthlyAppointmentsData);
+            };
+
+            // --- RENDERING FUNCTIONS ---
+
+            const populateClientSelect = () => {
+                if (!clientSelect) return;
+                clientSelect.innerHTML = '<option value="">Seleziona cliente</option>';
+                state.clients.forEach(client => {
+                    const option = document.createElement('option');
+                    option.value = client.id;
+                    option.textContent = `${client.name || ''} ${client.surname || ''}`.trim();
+                    clientSelect.appendChild(option);
+                });
+            };
+
+            const renderAppointments = () => {
+                if (!appointmentsList) return;
+                appointmentsList.innerHTML = '';
+                const todayString = new Date().toISOString().split('T')[0];
+                const todayAppointments = state.appointments.filter(app => app.appointment_date === todayString);
+
+                if (todayAppointments.length === 0) {
+                    appointmentsList.innerHTML = '<p>Nessun appuntamento per oggi.</p>';
+                    return;
+                }
+                
+                todayAppointments.sort((a,b) => a.appointment_time.localeCompare(b.appointment_time));
+
+                todayAppointments.forEach(app => {
+                    const item = document.createElement('div');
+                    item.className = 'appointment-item';
+                    const statusClass = `status-${app.status ? app.status.toLowerCase().replace(/\s/g, '-') : 'sconosciuto'}`;
+                    const clientName = `${app.name || 'N/A'} ${app.surname || 'N/A'}`.trim();
+
+                    item.innerHTML = `
+                        <div class="appointment-info">
+                            <h4>${clientName}</h4>
+                            <p>${app.appointment_time || 'N/A'} - ${app.service || 'N/A'}</p>
+                        </div>
+                        <span class="appointment-status ${statusClass}">${app.status || 'Sconosciuto'}</span>
+                    `;
+                    appointmentsList.appendChild(item);
+                });
+            };
+
+            const renderClients = () => {
+                if (!clientsList) return;
+                clientsList.innerHTML = '';
+                const sortedClients = [...state.clients].sort((a, b) => b.id - a.id);
+
+                if (sortedClients.length === 0) {
+                    clientsList.innerHTML = '<p>Nessun cliente recente.</p>';
+                    return;
+                }
+
+                sortedClients.forEach(client => {
+                    const item = document.createElement('div');
+                    item.className = 'appointment-item'; // Re-using style
+                    const initials = client.name && client.surname ? `${client.name[0]}${client.surname[0]}`.toUpperCase() : '??';
+                    item.innerHTML = `
+                        <div class="client-avatar" style="width: 40px; height: 40px; background: #667eea; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; flex-shrink: 0;">${initials}</div>
+                        <div class="client-info">
+                            <h4>${client.name || 'N/A'} ${client.surname || 'N/A'}</h4>
+                            <p>${client.phone || 'N/A'}</p>
+                        </div>
+                    `;
+                    clientsList.appendChild(item);
+                });
+            };
+
+            const renderCalendar = () => {
+                if (!calendarDatesContainer || !currentMonthYearHeader) return;
+
+                calendarDatesContainer.innerHTML = '';
+                const year = state.currentCalendarDate.getFullYear();
+                const month = state.currentCalendarDate.getMonth();
+
+                const firstDayOfMonth = new Date(year, month, 1);
+                const lastDayOfMonth = new Date(year, month + 1, 0);
+                const daysInMonth = lastDayOfMonth.getDate();
+
+                let startDayOfWeek = firstDayOfMonth.getDay();
+                startDayOfWeek = (startDayOfWeek === 0) ? 6 : startDayOfWeek - 1;
+
+                for (let i = 0; i < startDayOfWeek; i++) {
+                    const emptyDiv = document.createElement('div');
+                    emptyDiv.classList.add('calendar-date', 'empty');
+                    calendarDatesContainer.appendChild(emptyDiv);
+                }
+
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const date = new Date(year, month, day);
+                    const dateString = date.toISOString().split('T')[0];
+
+                    const hasAppointments = state.appointments.some(app => app.appointment_date === dateString);
+                    const isToday = dateString === new Date().toISOString().split('T')[0];
+
+                    const dateDiv = document.createElement('div');
+                    dateDiv.className = 'calendar-date';
+                    dateDiv.textContent = day;
+                    dateDiv.dataset.date = dateString;
+
+                    if (hasAppointments) {
+                        const indicator = document.createElement('div');
+                        indicator.className = 'appointment-indicator';
+                        dateDiv.appendChild(indicator);
+                    }
+                    if (isToday) {
+                        dateDiv.classList.add('today');
+                    }
+
+                    dateDiv.addEventListener('click', () => {
+                        renderAppointmentsForSelectedDay(dateString);
+                        document.querySelectorAll('.calendar-date').forEach(d => d.classList.remove('selected'));
+                        dateDiv.classList.add('selected');
+                    });
+                    
+                    calendarDatesContainer.appendChild(dateDiv);
+                }
+
+                currentMonthYearHeader.textContent = state.currentCalendarDate.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' });
+            };
+
+            const renderAppointmentsForSelectedDay = (dateString) => {
+                if (!selectedDayAppointmentsList || !selectedDayAppointmentsTitle) return;
+
+                selectedDayAppointmentsList.innerHTML = '';
+
+                if (!dateString) {
+                    selectedDayAppointmentsTitle.textContent = 'Appuntamenti del Giorno Selezionato';
+                    selectedDayAppointmentsList.innerHTML = '<p>Clicca su un giorno nel calendario per vedere gli appuntamenti.</p>';
+                    return;
+                }
+
+                const selectedDate = new Date(dateString + 'T00:00:00');
+                const formattedDate = selectedDate.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' });
+                selectedDayAppointmentsTitle.textContent = `Appuntamenti per ${formattedDate}`;
+
+                const appointmentsForDay = state.appointments.filter(app => app.appointment_date === dateString);
+                
+                appointmentsForDay.sort((a,b) => a.appointment_time.localeCompare(b.appointment_time));
+
+                if (appointmentsForDay.length === 0) {
+                    selectedDayAppointmentsList.innerHTML = `<p>Nessun appuntamento per il ${formattedDate}.</p>`;
+                    return;
+                }
+
+                appointmentsForDay.forEach(app => {
+                    const item = document.createElement('div');
+                    item.className = 'appointment-item';
+                    const statusClass = `status-${app.status ? app.status.toLowerCase().replace(/\s/g, '-') : 'sconosciuto'}`;
+                    const clientName = `${app.name || 'N/A'} ${app.surname || 'N/A'}`.trim();
+
+                    item.innerHTML = `
+                        <div class="appointment-info">
+                            <h4>${clientName}</h4>
+                            <p>${app.appointment_time || 'N/A'} - ${app.service || 'N/A'}</p>
+                            ${app.notes ? `<p class="appointment-notes" style="font-size: 0.8em; color: #666; font-style: italic;">Note: ${app.notes}</p>` : ''}
+                        </div>
+                        <div class="appointment-actions">
+                            <span class="appointment-status ${statusClass}">${app.status || 'Sconosciuto'}</span>
+                            <button class="edit-appointment-btn" data-appointment-id="${app.id}" title="Modifica appuntamento">
+                                <i data-lucide="edit-2" style="width: 16px; height: 16px;"></i>
+                            </button>
+                        </div>
+                    `;
+                    selectedDayAppointmentsList.appendChild(item);
+                });
+
+                selectedDayAppointmentsList.querySelectorAll('.edit-appointment-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const appointmentId = parseInt(e.currentTarget.dataset.appointmentId, 10);
+                        editAppointment(appointmentId);
+                    });
+                });
+                
+                lucide.createIcons();
+            };
+            
+            const renderRevenueChart = (monthlyRevenueData, monthlyAppointmentsData) => {
+                if (!revenueChartCanvas) return;
+                const ctx = revenueChartCanvas.getContext('2d');
+                if (revenueChartInstance) revenueChartInstance.destroy();
+
+                const labels = monthlyRevenueData.map(d => d.month);
+                
+                revenueChartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: 'Incasso Mensile',
+                                data: monthlyRevenueData.map(d => d.revenue),
+                                backgroundColor: 'rgba(153, 102, 255, 0.6)',
+                                yAxisID: 'y',
+                            },
+                            {
+                                label: 'Appuntamenti Mensili',
+                                data: monthlyAppointmentsData.map(d => d.count),
+                                type: 'line',
+                                borderColor: 'rgb(75, 192, 192)',
+                                tension: 0.3,
+                                yAxisID: 'y1',
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: { position: 'left', title: { display: true, text: 'Incasso (€)' } },
+                            y1: { position: 'right', title: { display: true, text: 'N° Appuntamenti' }, grid: { drawOnChartArea: false } }
+                        }
+                    }
+                });
+            };
+
+            const showSection = (sectionId) => {
+                contentSections.forEach(section => section.classList.remove('active'));
+                const targetSection = document.getElementById(`${sectionId}-section`);
+                if (targetSection) {
+                    targetSection.classList.add('active');
+                    state.activeSection = sectionId;
+                    if (sectionId === 'reports') fetchRevenueData();
+                }
+                navItems.forEach(item => item.classList.toggle('active', item.dataset.section === sectionId));
+            };
+
+            // --- UTILITY FUNCTIONS ---
+
+            const showModal = (modalElement) => {
+                if (modalElement) {
+                    modalElement.classList.add('show');
+                    document.body.classList.add('modal-open');
+                }
+            };
+
+            const hideModal = (modalElement) => {
+                if (modalElement) {
+                    modalElement.classList.remove('show');
+                    document.body.classList.remove('modal-open');
+                }
+            };
+
+            const showNotification = (message, type = 'success', duration = 3000) => {
+                if (!notification || !notificationText) return;
+                notificationText.textContent = message;
+                notification.className = 'notification';
+                notification.classList.add('show', type);
+                setTimeout(() => notification.classList.remove('show'), duration);
+            };
+
+            const editAppointment = (appointmentId) => {
+                const appointment = state.appointments.find(app => app.id === appointmentId);
+                if (!appointment) {
+                    showNotification('Appuntamento non trovato', 'error');
+                    return;
+                }
+                state.editingAppointment = appointment;
+                if (clientSelect) clientSelect.value = appointment.client_id;
+                if (serviceSelect) serviceSelect.value = appointment.service;
+                if (appointmentDateInput) appointmentDateInput.value = appointment.appointment_date;
+                if (appointmentTimeInput) appointmentTimeInput.value = appointment.appointment_time;
+                if (appointmentNotesInput) appointmentNotesInput.value = appointment.notes || '';
+                const modalTitle = newAppointmentModal.querySelector('.modal-title');
+                if (modalTitle) modalTitle.textContent = 'Modifica Appuntamento';
+                const submitBtn = appointmentForm.querySelector('button[type="submit"]');
+                if (submitBtn) submitBtn.textContent = 'Aggiorna Appuntamento';
+                showModal(newAppointmentModal);
+            };
+
+            const resetAppointmentModal = () => {
+                state.editingAppointment = null;
+                const modalTitle = newAppointmentModal.querySelector('.modal-title');
+                if (modalTitle) modalTitle.textContent = 'Nuovo Appuntamento';
+                const submitBtn = appointmentForm.querySelector('button[type="submit"]');
+                if (submitBtn) submitBtn.textContent = 'Salva Appuntamento';
+                appointmentForm.reset();
+            };
+
+            // --- EVENT HANDLERS ---
+
+            const handleAppointmentSubmit = async (e) => {
+                e.preventDefault();
+                if (!clientSelect.value || !serviceSelect.value || !appointmentDateInput.value || !appointmentTimeInput.value) {
+                    showNotification('Per favore, compila tutti i campi obbligatori.', 'error');
+                    return;
+                }
+                const selectedClient = state.clients.find(c => c.id === parseInt(clientSelect.value, 10));
+                
+                const data = {
+                    client_id: parseInt(clientSelect.value, 10),
+                    service: serviceSelect.value,
+                    appointment_date: appointmentDateInput.value,
+                    appointment_time: appointmentTimeInput.value,
+                    notes: appointmentNotesInput.value || '',
+                    status: 'Confermato', // Default status
+                    name: selectedClient.name,
+                    surname: selectedClient.surname
+                };
+                
+                try {
+                    let successMessage;
+                    if (state.editingAppointment) {
+                        const index = state.appointments.findIndex(app => app.id === state.editingAppointment.id);
+                        if (index !== -1) {
+                           state.appointments[index] = { ...state.editingAppointment, ...data };
+                        }
+                        successMessage = 'Appuntamento aggiornato con successo!';
+                    } else {
+                        data.id = Math.max(...state.appointments.map(a => a.id), 0) + 1;
+                        state.appointments.push(data);
+                        successMessage = 'Appuntamento creato con successo!';
+                    }
+                    showNotification(successMessage);
+                    hideModal(newAppointmentModal);
+                    resetAppointmentModal();
+                    await fetchAppointments();
+                    await fetchDashboardData();
+                    if (state.activeSection === 'reports') await fetchRevenueData();
+                } catch (error) {
+                    const action = state.editingAppointment ? 'aggiornamento' : 'salvataggio';
+                    showNotification(`Errore nel ${action}: ${error.message}`, 'error');
+                }
+            };
+
+            const handleClientSubmit = async (e) => {
+                e.preventDefault();
+                if (!clientNameInput.value || !clientSurnameInput.value || !clientPhoneInput.value) {
+                    showNotification('Compila nome, cognome e telefono.', 'error');
+                    return;
+                }
+                const data = {
+                    id: Math.max(...state.clients.map(c => c.id), 0) + 1,
+                    name: clientNameInput.value,
+                    surname: clientSurnameInput.value,
+                    phone: clientPhoneInput.value,
+                    email: clientEmailInput.value || '',
+                    notes: clientNotesInput.value || ''
+                };
+                try {
+                    state.clients.push(data);
+                    showNotification('Cliente aggiunto con successo!');
+                    hideModal(newClientModal);
+                    clientForm.reset();
+                    await fetchClients();
+                } catch (error) {
+                    showNotification(`Errore nel salvataggio: ${error.message}`, 'error');
+                }
+            };
+
+            // --- INITIALIZATION ---
+            const init = async () => {
+                lucide.createIcons();
+
+                await fetchClients();
+                await fetchAppointments();
+                await fetchDashboardData();
+
+                if (newAppointmentBtn) {
+                    newAppointmentBtn.addEventListener('click', () => {
+                        resetAppointmentModal();
+                        const today = new Date().toISOString().split('T')[0];
+                        if (appointmentDateInput) appointmentDateInput.value = today;
+                        showModal(newAppointmentModal);
+                    });
+                }
+                if (showNewClientModalBtn) showNewClientModalBtn.addEventListener('click', () => showModal(newClientModal));
+                if (cancelAppointmentBtn) cancelAppointmentBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    hideModal(newAppointmentModal);
+                    resetAppointmentModal();
+                });
+                if (cancelClientBtn) cancelClientBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    hideModal(newClientModal);
+                    clientForm.reset();
+                });
+                document.querySelectorAll('.modal').forEach(modal => {
+                    modal.addEventListener('click', (e) => {
+                        if (e.target === modal) {
+                            hideModal(modal);
+                            if (modal === newAppointmentModal) resetAppointmentModal();
+                        }
+                    });
+                });
+                if (appointmentForm) appointmentForm.addEventListener('submit', handleAppointmentSubmit);
+                if (clientForm) clientForm.addEventListener('submit', handleClientSubmit);
+                if (prevMonthBtn) prevMonthBtn.addEventListener('click', () => {
+                    state.currentCalendarDate.setMonth(state.currentCalendarDate.getMonth() - 1);
+                    renderCalendar();
+                });
+                if (nextMonthBtn) nextMonthBtn.addEventListener('click', () => {
+                    state.currentCalendarDate.setMonth(state.currentCalendarDate.getMonth() + 1);
+                    renderCalendar();
+                });
+                navItems.forEach(item => {
+                    item.addEventListener('click', function() {
+                        const sectionToActivate = this.dataset.section;
+                        showSection(sectionToActivate);
+                    });
+                });
+                showSection(state.activeSection);
+            };
+
+            init();
+        });
     </script>
 </body>
 </html>
