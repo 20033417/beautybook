@@ -227,8 +227,8 @@
             color: #667eea;
         }
 
-        .status-confirmed { background: #d4edda; color: #155724; }
-        .status-pending { background: #fff3cd; color: #856404; }
+        .status-confermato { background: #d4edda; color: #155724; }
+        .status-in-attesa { background: #fff3cd; color: #856404; }
 
         .calendar-header {
             display: flex;
@@ -490,11 +490,11 @@
                 <section id="dashboard-section" class="content-section active">
                     <div class="dashboard-grid">
                         <div class="stats-card">
-                            <div class="stats-number">0</div>
+                            <div id="today-appointments-count" class="stats-number">0</div>
                             <div class="stats-label">Appuntamenti Oggi</div>
                         </div>
                         <div class="stats-card">
-                            <div class="stats-number">€0.00</div>
+                            <div id="today-revenue-amount" class="stats-number">€0.00</div>
                             <div class="stats-label">Incasso Giornaliero</div>
                         </div>
                         <div class="quick-actions">
@@ -664,8 +664,8 @@
             const calendarDatesContainer = document.getElementById('calendar-dates');
             const currentMonthYearHeader = document.getElementById('currentMonthYear');
 
-            const todayAppointmentsCount = document.querySelector('#dashboard-section .stats-number');
-            const todayRevenueAmount = document.querySelectorAll('#dashboard-section .stats-number')[1];
+            const todayAppointmentsCount = document.getElementById('today-appointments-count');
+            const todayRevenueAmount = document.getElementById('today-revenue-amount');
 
             const selectedDayAppointmentsTitle = document.getElementById('selectedDayAppointmentsTitle');
             const selectedDayAppointmentsList = document.getElementById('selectedDayAppointmentsList');
@@ -683,13 +683,34 @@
 
             const contentSections = document.querySelectorAll('.content-section');
             const navItems = document.querySelectorAll('#main-nav .nav-item');
+            
+            // Funzione per creare le icone in modo sicuro
+            const safeCreateIcons = () => {
+                try {
+                    if (lucide) {
+                        lucide.createIcons();
+                    }
+                } catch (e) {
+                    console.error("Lucide icon library not available:", e);
+                }
+            };
 
             // --- APPLICATION STATE (STATIC DATA) ---
+            const getTodayDateString = () => {
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = (now.getMonth() + 1).toString().padStart(2, '0');
+                const day = now.getDate().toString().padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            };
+            
+            const todayStringStatic = getTodayDateString();
+
             const state = {
                 appointments: [
-                    { id: 1, client_id: 1, service: 'Taglio e Piega', appointment_date: '2025-07-26', appointment_time: '09:00', status: 'Confermato', notes: 'Primo appuntamento', name: 'Maria', surname: 'Bianchi', price: 45 },
-                    { id: 2, client_id: 2, service: 'Barba e Baffi', appointment_date: '2025-07-26', appointment_time: '10:30', status: 'In attesa', notes: '', name: 'Luigi', surname: 'Verdi', price: 15 },
-                    { id: 3, client_id: 3, service: 'Colore', appointment_date: '2025-07-28', appointment_time: '14:00', status: 'Confermato', notes: '', name: 'Anna', surname: 'Neri', price: 60 },
+                    { id: 1, client_id: 1, service: 'Taglio e Piega', appointment_date: todayStringStatic, appointment_time: '09:00', status: 'Confermato', notes: 'Primo appuntamento', price: 45 },
+                    { id: 2, client_id: 2, service: 'Barba e Baffi', appointment_date: todayStringStatic, appointment_time: '10:30', status: 'In attesa', notes: '', price: 15 },
+                    { id: 3, client_id: 3, service: 'Colore', appointment_date: '2025-07-28', appointment_time: '14:00', status: 'Confermato', notes: '', price: 60 },
                 ],
                 clients: [
                     { id: 1, name: 'Maria', surname: 'Bianchi', phone: '3331234567'},
@@ -705,19 +726,27 @@
 
             const fetchClients = async () => {
                 // Simula una chiamata API
-                renderClients();
-                populateClientSelect();
+                const clientsWithFullName = state.clients.map(client => ({
+                    ...client,
+                    fullName: `${client.name || ''} ${client.surname || ''}`.trim()
+                }));
+                renderClients(clientsWithFullName);
+                populateClientSelect(clientsWithFullName);
             };
 
             const fetchAppointments = async () => {
-                // Simula una chiamata API
-                renderAppointments();
+                 // Simula una chiamata API
+                const appointmentsWithClientData = state.appointments.map(app => {
+                    const client = state.clients.find(c => c.id === app.client_id);
+                    return { ...app, name: client?.name, surname: client?.surname };
+                });
+                renderAppointments(appointmentsWithClientData);
                 renderCalendar();
-                renderAppointmentsForSelectedDay(null);
+                renderAppointmentsForSelectedDay(null, appointmentsWithClientData); // Pass data
             };
             
             const fetchDashboardData = async () => {
-                const todayString = new Date().toISOString().split('T')[0];
+                const todayString = getTodayDateString();
                 const todayAppointments = state.appointments.filter(app => app.appointment_date === todayString);
                 
                 if (todayAppointmentsCount) {
@@ -747,22 +776,22 @@
 
             // --- RENDERING FUNCTIONS ---
 
-            const populateClientSelect = () => {
+            const populateClientSelect = (clients) => {
                 if (!clientSelect) return;
                 clientSelect.innerHTML = '<option value="">Seleziona cliente</option>';
-                state.clients.forEach(client => {
+                clients.forEach(client => {
                     const option = document.createElement('option');
                     option.value = client.id;
-                    option.textContent = `${client.name || ''} ${client.surname || ''}`.trim();
+                    option.textContent = client.fullName;
                     clientSelect.appendChild(option);
                 });
             };
 
-            const renderAppointments = () => {
+            const renderAppointments = (appointments) => {
                 if (!appointmentsList) return;
                 appointmentsList.innerHTML = '';
-                const todayString = new Date().toISOString().split('T')[0];
-                const todayAppointments = state.appointments.filter(app => app.appointment_date === todayString);
+                const todayString = getTodayDateString();
+                const todayAppointments = appointments.filter(app => app.appointment_date === todayString);
 
                 if (todayAppointments.length === 0) {
                     appointmentsList.innerHTML = '<p>Nessun appuntamento per oggi.</p>';
@@ -788,10 +817,10 @@
                 });
             };
 
-            const renderClients = () => {
+            const renderClients = (clients) => {
                 if (!clientsList) return;
                 clientsList.innerHTML = '';
-                const sortedClients = [...state.clients].sort((a, b) => b.id - a.id);
+                const sortedClients = [...clients].sort((a, b) => b.id - a.id);
 
                 if (sortedClients.length === 0) {
                     clientsList.innerHTML = '<p>Nessun cliente recente.</p>';
@@ -804,8 +833,8 @@
                     const initials = client.name && client.surname ? `${client.name[0]}${client.surname[0]}`.toUpperCase() : '??';
                     item.innerHTML = `
                         <div class="client-avatar" style="width: 40px; height: 40px; background: #667eea; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; flex-shrink: 0;">${initials}</div>
-                        <div class="client-info">
-                            <h4>${client.name || 'N/A'} ${client.surname || 'N/A'}</h4>
+                        <div class="client-info" style="flex-grow: 1; margin-left: 15px;">
+                            <h4>${client.fullName}</h4>
                             <p>${client.phone || 'N/A'}</p>
                         </div>
                     `;
@@ -838,7 +867,7 @@
                     const dateString = date.toISOString().split('T')[0];
 
                     const hasAppointments = state.appointments.some(app => app.appointment_date === dateString);
-                    const isToday = dateString === new Date().toISOString().split('T')[0];
+                    const isToday = dateString === getTodayDateString();
 
                     const dateDiv = document.createElement('div');
                     dateDiv.className = 'calendar-date';
@@ -866,8 +895,13 @@
                 currentMonthYearHeader.textContent = state.currentCalendarDate.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' });
             };
 
-            const renderAppointmentsForSelectedDay = (dateString) => {
+            const renderAppointmentsForSelectedDay = (dateString, allAppointments = null) => {
                 if (!selectedDayAppointmentsList || !selectedDayAppointmentsTitle) return;
+
+                const appointments = allAppointments || state.appointments.map(app => {
+                    const client = state.clients.find(c => c.id === app.client_id);
+                    return { ...app, name: client?.name, surname: client?.surname };
+                });
 
                 selectedDayAppointmentsList.innerHTML = '';
 
@@ -881,7 +915,7 @@
                 const formattedDate = selectedDate.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' });
                 selectedDayAppointmentsTitle.textContent = `Appuntamenti per ${formattedDate}`;
 
-                const appointmentsForDay = state.appointments.filter(app => app.appointment_date === dateString);
+                const appointmentsForDay = appointments.filter(app => app.appointment_date === dateString);
                 
                 appointmentsForDay.sort((a,b) => a.appointment_time.localeCompare(b.appointment_time));
 
@@ -919,7 +953,7 @@
                     });
                 });
                 
-                lucide.createIcons();
+                safeCreateIcons();
             };
             
             const renderRevenueChart = (monthlyRevenueData, monthlyAppointmentsData) => {
@@ -1023,6 +1057,22 @@
                 if (submitBtn) submitBtn.textContent = 'Salva Appuntamento';
                 appointmentForm.reset();
             };
+            
+            const refreshAllData = async () => {
+                await fetchClients(); // Ricarica e renderizza clienti e select
+                await fetchAppointments(); // Ricarica e renderizza appuntamenti e calendario
+                await fetchDashboardData(); // Ricarica e renderizza dati dashboard
+                
+                // Aggiorna la vista del giorno selezionato nel calendario se una data è selezionata
+                const selectedDateElem = document.querySelector('.calendar-date.selected');
+                if (selectedDateElem && selectedDateElem.dataset.date) {
+                    renderAppointmentsForSelectedDay(selectedDateElem.dataset.date);
+                }
+
+                if (state.activeSection === 'reports') {
+                    await fetchRevenueData(); // Ricarica il grafico se la sezione è attiva
+                }
+            };
 
             // --- EVENT HANDLERS ---
 
@@ -1032,8 +1082,7 @@
                     showNotification('Per favore, compila tutti i campi obbligatori.', 'error');
                     return;
                 }
-                const selectedClient = state.clients.find(c => c.id === parseInt(clientSelect.value, 10));
-                
+                                
                 const data = {
                     client_id: parseInt(clientSelect.value, 10),
                     service: serviceSelect.value,
@@ -1041,8 +1090,7 @@
                     appointment_time: appointmentTimeInput.value,
                     notes: appointmentNotesInput.value || '',
                     status: 'Confermato', // Default status
-                    name: selectedClient.name,
-                    surname: selectedClient.surname
+                    // I dati del cliente verranno aggiunti dopo
                 };
                 
                 try {
@@ -1050,20 +1098,18 @@
                     if (state.editingAppointment) {
                         const index = state.appointments.findIndex(app => app.id === state.editingAppointment.id);
                         if (index !== -1) {
-                           state.appointments[index] = { ...state.editingAppointment, ...data };
+                           state.appointments[index] = { ...state.appointments[index], ...data };
                         }
                         successMessage = 'Appuntamento aggiornato con successo!';
                     } else {
-                        data.id = Math.max(...state.appointments.map(a => a.id), 0) + 1;
+                        data.id = state.appointments.length > 0 ? Math.max(...state.appointments.map(a => a.id)) + 1 : 1;
                         state.appointments.push(data);
                         successMessage = 'Appuntamento creato con successo!';
                     }
                     showNotification(successMessage);
                     hideModal(newAppointmentModal);
                     resetAppointmentModal();
-                    await fetchAppointments();
-                    await fetchDashboardData();
-                    if (state.activeSection === 'reports') await fetchRevenueData();
+                    await refreshAllData();
                 } catch (error) {
                     const action = state.editingAppointment ? 'aggiornamento' : 'salvataggio';
                     showNotification(`Errore nel ${action}: ${error.message}`, 'error');
@@ -1077,7 +1123,7 @@
                     return;
                 }
                 const data = {
-                    id: Math.max(...state.clients.map(c => c.id), 0) + 1,
+                    id: state.clients.length > 0 ? Math.max(...state.clients.map(c => c.id)) + 1 : 1,
                     name: clientNameInput.value,
                     surname: clientSurnameInput.value,
                     phone: clientPhoneInput.value,
@@ -1089,7 +1135,7 @@
                     showNotification('Cliente aggiunto con successo!');
                     hideModal(newClientModal);
                     clientForm.reset();
-                    await fetchClients();
+                    await refreshAllData(); // Aggiorna tutto, inclusa la select dei clienti nel modal appuntamenti
                 } catch (error) {
                     showNotification(`Errore nel salvataggio: ${error.message}`, 'error');
                 }
@@ -1097,16 +1143,14 @@
 
             // --- INITIALIZATION ---
             const init = async () => {
-                lucide.createIcons();
+                safeCreateIcons();
 
-                await fetchClients();
-                await fetchAppointments();
-                await fetchDashboardData();
+                await refreshAllData();
 
                 if (newAppointmentBtn) {
                     newAppointmentBtn.addEventListener('click', () => {
                         resetAppointmentModal();
-                        const today = new Date().toISOString().split('T')[0];
+                        const today = getTodayDateString();
                         if (appointmentDateInput) appointmentDateInput.value = today;
                         showModal(newAppointmentModal);
                     });
