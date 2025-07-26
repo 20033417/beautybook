@@ -1,0 +1,839 @@
+/* --- Global CSS Variables --- */
+:root {
+    --primary-color: #667eea;
+    --secondary-color: #764ba2;
+    --accent-color: #ff6b6b;
+    --text-dark: #333;
+    --text-light: #666;
+    --bg-gradient: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    --bg-white-translucent: rgba(255, 255, 255, 0.95);
+    --border-radius-sm: 12px;
+    --border-radius-lg: 20px;
+    --shadow-main: 0 8px 32px rgba(0, 0, 0, 0.1);
+    --transition-fast: all 0.3s ease;
+    --transition-modal: all 0.3s ease-out; /* Added for modal specific transitions */
+}
+
+/* --- Reset and Global Styles --- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: var(--bg-gradient);
+    min-height: 100vh;
+    color: var(--text-dark);
+    line-height: 1.6; /* Improved readability */
+}
+
+/* --- Main Layout --- */
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.main-content {
+    display: grid;
+    grid-template-columns: 1fr 2fr 1fr;
+    gap: 30px;
+    align-items: start; /* Ensures items start at the top of their grid area */
+}
+
+/* --- Component: Header --- */
+.header {
+    background: var(--bg-white-translucent);
+    backdrop-filter: blur(10px);
+    border-radius: var(--border-radius-lg);
+    padding: 20px 30px;
+    margin-bottom: 30px;
+    box-shadow: var(--shadow-main);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    font-size: 28px;
+    font-weight: bold;
+    color: var(--primary-color);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.logo i[data-lucide] {
+    font-size: 1em; /* Adjust Lucide icon size relative to text */
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    color: var(--text-light);
+}
+
+.user-info i[data-lucide] {
+    font-size: 1.2em;
+    color: var(--primary-color);
+}
+
+.plan-badge {
+    background: var(--bg-gradient);
+    color: white;
+    padding: 8px 16px;
+    border-radius: var(--border-radius-lg);
+    font-size: 12px;
+    font-weight: bold;
+    white-space: nowrap; /* Prevent text wrapping */
+}
+
+/* --- Component: Sidebar & Navigation --- */
+.sidebar {
+    background: var(--bg-white-translucent);
+    backdrop-filter: blur(10px);
+    border-radius: var(--border-radius-lg);
+    padding: 25px;
+    box-shadow: var(--shadow-main);
+}
+
+.sidebar h3 {
+    color: var(--primary-color);
+    margin-bottom: 20px;
+    font-size: 18px;
+    text-align: center; /* Centered heading */
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 15px;
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    transition: var(--transition-fast);
+    margin-bottom: 8px;
+    color: var(--text-light);
+    font-weight: 500; /* Slightly bolder */
+}
+
+.nav-item i[data-lucide] {
+    font-size: 1.1em;
+}
+
+.nav-item:hover:not(.active) { /* Added :not(.active) to prevent hover on active */
+    background: rgba(102, 126, 234, 0.1); /* Lighter hover for non-active */
+    color: var(--primary-color);
+    transform: translateX(5px);
+}
+
+.nav-item.active {
+    background: var(--bg-gradient);
+    color: white;
+    font-weight: bold; /* Make active text bolder */
+    transform: translateX(5px); /* Maintain consistency */
+}
+
+.nav-item.active i[data-lucide] {
+    color: white; /* Ensure icons are white in active state */
+}
+
+/* --- Component: Calendar --- */
+.calendar-container {
+    background: var(--bg-white-translucent);
+    backdrop-filter: blur(10px);
+    border-radius: var(--border-radius-lg);
+    padding: 30px;
+    box-shadow: var(--shadow-main);
+    display: flex; /* Added for flex layout within container */
+    flex-direction: column; /* Stack children vertically */
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    padding-bottom: 15px; /* Add some space below header */
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05); /* Subtle separator */
+}
+
+.calendar-header h2 {
+    color: var(--primary-color);
+    font-size: 24px;
+    margin: 0; /* Remove default h2 margin */
+}
+
+.calendar-nav {
+    display: flex;
+    gap: 10px;
+    align-items: center; /* Align buttons nicely */
+}
+
+.calendar-nav button {
+    background: var(--primary-color); /* Use primary color for nav buttons */
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: var(--border-radius-sm); /* Consistent border radius */
+    cursor: pointer;
+    transition: var(--transition-fast); /* Use general transition variable */
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-weight: 600; /* Make text a bit bolder */
+}
+
+.calendar-nav button:hover {
+    background: var(--secondary-color); /* Darker on hover */
+    transform: translateY(-2px); /* Consistent hover effect */
+}
+
+.calendar-nav button i[data-lucide] {
+    font-size: 1.2em; /* Larger icons for buttons */
+}
+
+.calendar-nav .action-btn { /* Style for "Nuovo Appuntamento" button */
+    background: var(--accent-color); /* Use accent color */
+    color: white;
+    padding: 10px 20px;
+    border-radius: var(--border-radius-sm);
+    font-size: 1em; /* Standard font size */
+    box-shadow: 0 4px 10px rgba(255, 107, 107, 0.3); /* Subtle shadow */
+}
+
+.calendar-nav .action-btn:hover {
+    background: #e65a5a; /* Slightly darker accent on hover */
+    transform: translateY(-2px);
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 10px;
+}
+
+.calendar-grid.calendar-days {
+    margin-bottom: 10px;
+    text-align: center;
+    padding: 12px; /* Increased padding */
+    font-weight: bold;
+    color: var(--primary-color);
+    background: rgba(102, 126, 234, 0.1);
+    border-radius: var(--border-radius-sm); /* Consistent border radius */
+}
+
+.calendar-date {
+    text-align: center;
+    padding: 15px 10px;
+    border-radius: var(--border-radius-sm); /* Consistent border radius */
+    cursor: pointer;
+    transition: var(--transition-fast);
+    min-height: 60px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    background: rgba(255, 255, 255, 0.7); /* Slightly transparent white for dates */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); /* Subtle shadow for individual dates */
+}
+
+.calendar-date:hover {
+    background: rgba(102, 126, 234, 0.2); /* Lighter hover effect */
+    transform: translateY(-2px); /* Changed to translateY for consistency */
+}
+
+.calendar-date.empty { /* Style for empty filler days */
+    background: transparent;
+    box-shadow: none;
+    cursor: default;
+    opacity: 0.3; /* Slightly faded */
+}
+
+.calendar-date.has-appointments {
+    background: var(--primary-color); /* Use primary color if has appointments */
+    color: white;
+    font-weight: bold; /* Make text bold if has appointments */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); /* More prominent shadow */
+}
+
+.calendar-date.has-appointments .appointment-indicator {
+    background: white; /* White indicator on colored background */
+}
+
+.calendar-date.today { /* Changed from .selected to .today as per JS */
+    background: var(--accent-color);
+    color: white;
+    font-weight: bold;
+    box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3); /* Accent shadow */
+}
+
+.calendar-date.today .appointment-indicator {
+    background: white;
+}
+
+.appointment-indicator {
+    width: 6px;
+    height: 6px;
+    background: var(--primary-color); /* Primary color indicator on default background */
+    border-radius: 50%;
+    position: absolute;
+    bottom: 8px; /* Adjusted position */
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+/* --- Component: Appointment List --- */
+.appointments-today {
+    margin-top: 30px;
+    padding: 20px;
+    background: rgba(102, 126, 234, 0.05); /* Light primary color background */
+    border-radius: var(--border-radius-lg); /* Consistent border radius */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); /* Subtle shadow */
+}
+
+.appointments-today h3 {
+    color: var(--primary-color);
+    margin-bottom: 20px;
+    font-size: 1.4em; /* Slightly larger heading */
+}
+
+.appointment-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    background: white;
+    border-radius: var(--border-radius-sm);
+    margin-bottom: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    transition: var(--transition-fast); /* Use general transition variable */
+    border-left: 5px solid var(--primary-color); /* Added a left border for visual hierarchy */
+}
+
+.appointment-item:last-child { /* Remove margin-bottom for the last item */
+    margin-bottom: 0;
+}
+
+.appointment-item:hover {
+    transform: translateY(-3px); /* Slightly more prominent hover effect */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.appointment-info h4 {
+    color: var(--text-dark);
+    margin-bottom: 5px;
+    font-size: 1.1em; /* Slightly larger name */
+}
+
+.appointment-info p {
+    color: var(--text-light);
+    font-size: 14px;
+}
+
+.appointment-status {
+    padding: 6px 12px;
+    border-radius: var(--border-radius-lg);
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: capitalize; /* Capitalize status text */
+    white-space: nowrap; /* Prevent wrapping */
+}
+
+/* Status colors (ensure these match your backend/JS values: e.g., 'confirmed', 'pending') */
+.status-confermato { /* Changed from confirmed to confermato */
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-in-attesa { /* Added 'in-attesa' for pending */
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status-cancellato { /* Example for cancelled status */
+    background: #f8d7da;
+    color: #721c24;
+}
+
+/* --- Component: Right Panel (Stats, Actions, Clients) --- */
+.right-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.stats-card, .quick-actions, .clients-panel {
+    background: var(--bg-white-translucent);
+    backdrop-filter: blur(10px);
+    border-radius: var(--border-radius-lg);
+    padding: 25px;
+    box-shadow: var(--shadow-main);
+}
+
+.stats-card {
+    text-align: center;
+}
+
+.stats-number {
+    font-size: 36px;
+    font-weight: bold;
+    color: var(--primary-color);
+    margin-bottom: 10px;
+}
+
+.stats-label {
+    color: var(--text-light);
+    font-size: 14px;
+}
+
+.quick-actions h3, .clients-panel h3 {
+    color: var(--primary-color);
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.action-btn { /* General style for quick action buttons (not calendar nav) */
+    width: 100%;
+    padding: 15px;
+    background: var(--primary-color); /* Use primary color for quick actions */
+    color: white;
+    border: none;
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    margin-bottom: 10px;
+    font-size: 14px;
+    font-weight: bold;
+    transition: var(--transition-fast);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 4px 10px rgba(102, 126, 234, 0.3); /* Subtle shadow */
+}
+
+.action-btn:last-child {
+    margin-bottom: 0; /* Remove margin-bottom for the last action button */
+}
+
+.action-btn:hover {
+    background: var(--secondary-color); /* Darker on hover */
+    transform: translateY(-3px); /* Consistent hover effect */
+}
+
+.action-btn i[data-lucide] {
+    font-size: 1.2em;
+}
+
+.client-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08); /* Lighter border */
+}
+
+.client-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0; /* Remove padding if no border */
+}
+
+.client-avatar {
+    width: 45px; /* Slightly larger avatar */
+    height: 45px;
+    background: var(--bg-gradient);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 1.1em; /* Larger initials */
+    flex-shrink: 0; /* Prevent shrinking */
+}
+
+.client-info h4 {
+    color: var(--text-dark);
+    margin-bottom: 5px;
+    font-size: 1.1em;
+}
+
+.client-info p {
+    color: var(--text-light);
+    font-size: 12px;
+}
+
+/* --- Component: Modal --- */
+.modal {
+    /* Initially hidden by default, JS will manage display: flex/none and 'show' class */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6); /* Slightly darker overlay */
+    backdrop-filter: blur(8px); /* More blur effect */
+    z-index: 1000;
+    display: flex; /* Always flex so 'align-items' and 'justify-content' work */
+    align-items: center;
+    justify-content: center;
+    opacity: 0; /* Start invisible for transition */
+    visibility: hidden; /* Hide from screen readers when not visible */
+    transition: opacity var(--transition-modal), visibility var(--transition-modal);
+}
+
+.modal.show {
+    opacity: 1; /* Fade in */
+    visibility: visible; /* Make visible */
+}
+
+
+/* Stili per la gestione delle sezioni */
+.content-section {
+    display: none; /* Nasconde tutte le sezioni di default */
+    flex-grow: 1; /* Permette alla sezione attiva di occupare lo spazio disponibile */
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    overflow-y: auto; /* Abilita lo scroll se il contenuto è troppo lungo */
+}
+
+.content-section.active {
+    display: flex; /* Mostra la sezione attiva come flex container */
+    flex-direction: column; /* Per organizzare il contenuto in colonna */
+}
+
+/* Dashboard Layout */
+#dashboard-section {
+    display: flex; /* La dashboard sarà un flex container principale */
+    flex-direction: column;
+    gap: 20px; /* Spazio tra gli elementi della dashboard */
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.appointments-today {
+    padding: 15px;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+}
+
+/* Sposta i seguenti stili nel calendario-section */
+#calendar-section .calendar-header,
+#calendar-section .calendar-grid {
+    /* Assicurati che questi stili siano solo per la sezione calendario */
+    margin-bottom: 20px;
+}
+
+.calendar-container { /* Questo selettore ora si riferisce solo a #calendar-section */
+    /* Potresti voler rinominare .calendar-container a #calendar-section nel CSS */
+    /* o semplicemente assicurarti che i suoi stili si applichino a #calendar-section */
+    /* Esempio: */
+    /* #calendar-section {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    } */
+}
+
+/* Assicurati che .main-content sia un flex container per permettere alle sezioni di affiancarsi alla sidebar */
+.main-content {
+    display: flex;
+    flex: 1; /* Permette al main-content di occupare lo spazio rimanente */
+    gap: 20px;
+}
+
+.sidebar {
+    flex-shrink: 0; /* Impedisce alla sidebar di rimpicciolirsi */
+    width: 250px; /* Larghezza fissa per la sidebar */
+    padding: 20px;
+    background-color: #f0f2f5;
+    border-radius: 8px;
+}
+
+.modal-content {
+    background: white; /* Solid white background for content */
+    border-radius: var(--border-radius-lg);
+    padding: 35px; /* Slightly more padding */
+    width: 90%;
+    max-width: 550px; /* Slightly adjusted max-width */
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    transform: translateY(20px); /* Start slightly lower for slide-up effect */
+    transition: transform var(--transition-modal);
+}
+
+.modal.show .modal-content {
+    transform: translateY(0); /* Slide up to final position */
+}
+
+.modal h3 {
+    color: var(--primary-color);
+    margin-bottom: 25px; /* More space below heading */
+    text-align: center;
+    font-size: 1.8em; /* Larger heading */
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--text-dark);
+    font-weight: bold;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd; /* Lighter border */
+    border-radius: var(--border-radius-sm); /* Consistent border radius */
+    font-size: 15px; /* Slightly larger font */
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+    box-sizing: border-box; /* Ensures padding doesn't add to width */
+}
+
+.form-group textarea {
+    resize: vertical; /* Allow vertical resizing */
+    min-height: 80px; /* Minimum height for textarea */
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2); /* Focus ring effect */
+}
+
+.modal-buttons { /* Wrapper for buttons at the bottom of the modal form */
+    display: flex;
+    justify-content: flex-end; /* Align buttons to the right */
+    gap: 10px; /* Space between buttons */
+    margin-top: 30px; /* Space above buttons */
+}
+
+.btn-primary {
+    background: var(--bg-gradient);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    font-weight: bold;
+    transition: var(--transition-fast);
+    box-shadow: 0 4px 10px rgba(102, 126, 234, 0.3);
+}
+
+.btn-primary:hover {
+    opacity: 0.9; /* Slight opacity change on hover */
+    transform: translateY(-2px);
+}
+
+.btn-secondary {
+    background: #e0e0e0; /* Lighter background for secondary */
+    color: var(--text-dark); /* Dark text for secondary */
+    border: none; /* No border needed if background is solid */
+    padding: 12px 24px;
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    font-weight: bold;
+    transition: var(--transition-fast);
+}
+
+.btn-secondary:hover {
+    background: #ccc; /* Darker on hover */
+    transform: translateY(-2px);
+}
+
+/* --- Component: Notification --- */
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: var(--primary-color); /* Default primary color */
+    color: white;
+    padding: 15px 25px; /* More padding */
+    border-radius: var(--border-radius-sm);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    z-index: 1001;
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: opacity 0.4s ease-out, transform 0.4s ease-out; /* Smoother transition */
+    visibility: hidden; /* Hidden from screen readers initially */
+}
+
+.notification.show {
+    opacity: 1;
+    transform: translateY(0);
+    visibility: visible;
+}
+
+/* Notification types (override default background) */
+.notification.success {
+    background: #28a745; /* Green */
+}
+
+.notification.error {
+    background: #dc3545; /* Red */
+}
+
+
+/* --- Media Queries for Responsiveness --- */
+@media (max-width: 1200px) {
+    .main-content {
+        grid-template-columns: 1fr 2fr; /* Sidebar, Calendar | Right Panel moves below */
+    }
+    .right-panel {
+        grid-column: 1 / -1; /* Right panel spans full width */
+        flex-direction: row; /* Layout content horizontally */
+        flex-wrap: wrap; /* Allow items to wrap */
+        justify-content: center; /* Center items when wrapped */
+    }
+    .stats-card, .quick-actions, .clients-panel {
+        flex-grow: 1;
+        min-width: 280px; /* Ensure a minimum width for panels */
+        max-width: 48%; /* Max width to allow two columns */
+    }
+    .main-content {
+        gap: 20px; /* Reduce gap on smaller screens */
+    }
+}
+
+@media (max-width: 900px) {
+    .main-content {
+        grid-template-columns: 1fr; /* Stack all columns vertically */
+    }
+    .sidebar {
+        width: 100%; /* Sidebar takes full width */
+        order: 0; /* Ensure sidebar is at the top */
+    }
+    .calendar-container {
+        order: 1; /* Calendar below sidebar */
+    }
+    .right-panel {
+        order: 2; /* Right panel at the bottom */
+        flex-direction: column; /* Stack right panel items vertically again */
+        max-width: 100%; /* Take full width */
+    }
+    .stats-card, .quick-actions, .clients-panel {
+        max-width: 100%; /* Full width for right panel cards */
+    }
+    .header {
+        flex-direction: column;
+        gap: 15px;
+        padding: 15px;
+    }
+    .container {
+        padding: 15px; /* Reduce overall container padding */
+    }
+    .calendar-header h2 {
+        font-size: 20px;
+    }
+    .calendar-nav button {
+        padding: 8px 12px;
+        font-size: 0.9em;
+    }
+    .logo {
+        font-size: 24px;
+    }
+    .user-info {
+        flex-wrap: wrap; /* Allow user info to wrap */
+        justify-content: center;
+    }
+}
+
+@media (max-width: 600px) {
+    .modal-content {
+        padding: 25px;
+    }
+    .modal h3 {
+        font-size: 1.5em;
+    }
+    .btn-primary, .btn-secondary {
+        padding: 10px 18px;
+        font-size: 0.9em;
+    }
+    .calendar-grid {
+        gap: 5px; /* Smaller gap for calendar grid */
+    }
+    .calendar-date {
+        padding: 10px 5px; /* Smaller padding for dates */
+        min-height: 50px;
+    }
+    .appointment-item {
+        flex-direction: column; /* Stack info and status vertically */
+        align-items: flex-start;
+        gap: 8px;
+    }
+    .appointment-status {
+        align-self: flex-end; /* Push status to the right */
+    }
+
+/* ... (existing styles) ... */
+
+/* Component: Report Section */
+#reports-section .chart-container {
+    background: var(--bg-white-translucent);
+    backdrop-filter: blur(10px);
+    border-radius: var(--border-radius-lg);
+    padding: 30px;
+    box-shadow: var(--shadow-main);
+    margin-top: 20px;
+    position: relative;
+    /* Rimuoviamo l'altezza fissa qui, o la rendiamo più flessibile se vogliamo.
+       La altezza sarà gestita dal flex-grow e dal wrapper. */
+    min-height: 450px; /* Minima altezza per il contenitore complessivo */
+    max-height: 600px; /* Altezza massima per il contenitore complessivo */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px; /* Spazio tra h3 e chart-wrapper */
+    overflow: hidden; /* Nasconde l'overflow se il chart cresce troppo */
+}
+
+#reports-section .chart-container h3 {
+    color: var(--primary-color);
+    margin-bottom: 0;
+    font-size: 1.6em;
+    text-align: center;
+}
+
+/* NUOVI STILI PER IL WRAPPER DEL GRAFICO */
+#reports-section .chart-wrapper {
+    position: relative; /* Importante per il posizionamento del canvas */
+    width: 100%;
+    height: 100%; /* Occupa l'altezza disponibile nel contenitore flex */
+    max-height: 400px; /* La altezza massima effettiva del grafico */
+    flex-grow: 1; /* Permette al wrapper di riempire lo spazio restante */
+    min-height: 0; /* Permette al flex item di restringersi correttamente */
+}
+
+#reports-section canvas {
+    /* Rimuoviamo !important da height per lasciare più controllo a Chart.js */
+    width: 100%; 
+    height: 100%; /* Il canvas occupa il 100% dell'altezza del suo wrapper */
+    display: block; /* Essenziale per evitare spazi indesiderati */
+    /* Non è più necessario max-height sul canvas se il wrapper lo gestisce */
+}
+
+
+
+
+
+
+
+}

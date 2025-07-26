@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BeautyBooker - Gestione Appuntamenti</title>
+    <link rel="stylesheet" href="static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo">
+                <i data-lucide="scissors"></i>
+                BeautyBooker
+            </div>
+            <div class="user-info">
+                <span class="plan-badge">Piano PRO</span>
+                <span>Mario Rossi - Salone Eleganza</span>
+                <i data-lucide="user"></i>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <aside class="sidebar">
+                <h3>Menu Principale</h3>
+                <nav id="main-nav">
+                    <div class="nav-item active" data-section="dashboard">
+                        <i data-lucide="home"></i>
+                        Dashboard
+                    </div>
+                    <div class="nav-item" data-section="calendar">
+                        <i data-lucide="calendar"></i>
+                        Calendario
+                    </div>
+                    <div class="nav-item" data-section="clients">
+                        <i data-lucide="users"></i>
+                        Clienti
+                    </div>
+                    <div class="nav-item" data-section="services">
+                        <i data-lucide="scissors"></i>
+                        Servizi
+                    </div>
+            
+                    <div class="nav-item" data-section="reports">
+                        <i data-lucide="bar-chart"></i>
+                        Report
+                    </div>
+                    <div class="nav-item" data-section="settings">
+                        <i data-lucide="settings"></i>
+                        Impostazioni
+                    </div>
+                </nav>
+            </aside>
+
+            <section id="dashboard-section" class="content-section active">
+    <div class="dashboard-grid">
+        <div class="stats-card">
+            <div class="stats-number">12</div>
+            <div class="stats-label">Appuntamenti Oggi</div>
+        </div>
+        <div class="stats-card">
+            <div class="stats-number">€485</div>
+            <div class="stats-label">Incasso Giornaliero</div>
+        </div>
+        <div class="quick-actions">
+            <h3>Azioni Rapide</h3>
+
+            <button id="newAppointmentBtn" class="action-btn">
+                            <i data-lucide="plus"></i> Nuovo Appuntamento
+                        </button>
+            <button class="action-btn" id="showNewClientModalBtn"><i data-lucide="user-plus"></i> Nuovo Cliente</button>
+        </div>
+        </div>
+    <div class="appointments-today">
+        <h3>Appuntamenti di Oggi</h3>
+        <div id="appointments-list">
+        </div>
+    </div>
+</section>
+
+            <section id="calendar-section" class="content-section">
+                <div class="calendar-header">
+                    <h2 id="currentMonthYear"></h2>
+                    <div class="calendar-nav">
+                        <button id="prevMonthBtn"><i data-lucide="chevron-left"></i></button>
+                        <button id="nextMonthBtn"><i data-lucide="chevron-right"></i></button>
+                       
+                        <div class="dashboard-grid">
+                        <button id="newAppointmentBtn" class="action-btn">
+                            <i data-lucide="plus"></i> Nuovo Appuntamento
+                        </button>
+                          </div>
+                    </div>
+                </div>
+                <div class="calendar-grid calendar-days">
+                    <div>Lun</div><div>Mar</div><div>Mer</div><div>Gio</div><div>Ven</div><div>Sab</div><div>Dom</div>
+                </div>
+                <div class="calendar-grid" id="calendar-dates">
+                    </div>
+                <div class="appointments-selected-day">
+                    <h3 id="selectedDayAppointmentsTitle">Appuntamenti del Giorno Selezionato</h3>
+                    <div id="selectedDayAppointmentsList">
+                        <p>Clicca su un giorno nel calendario per vedere gli appuntamenti.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="clients-section" class="content-section">
+                <h2>Gestione Clienti</h2>
+                </section>
+
+            <section id="services-section" class="content-section">
+                <h2>Gestione Servizi</h2>
+
+                <div class="quick-actions">
+            <h3>Azioni Servizi</h3>
+            <button class="action-btn" id="showNewClientModalBtn"><i data-lucide="plus"></i> Nuovo Servizio</button>
+            <button class="action-btn" id="sendReminderBtn"><i data-lucide="edit"></i> Modifica Servizio</button>
+            <button class="action-btn" id="showBookingLinkBtn"><i data-lucide="trash-2"></i> Elimina Servizio</button>
+        </div>
+
+                </section>
+
+            <section id="reminders-section" class="content-section">
+                <h2>Promemoria</h2>
+                </section>
+
+              <section id="reports-section" class="content-section">
+                <h2>Report e Statistiche</h2>
+                <div class="chart-container">
+                    <h3>Incassi Giornalieri e Mensili</h3>
+                    <div class="chart-wrapper"> <canvas id="revenueChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <section id="settings-section" class="content-section">
+                <h2>Impostazioni</h2>
+                </section>
+        </main>
+    </div>
+
+     <div class="modal" id="newAppointmentModal">
+        <div class="modal-content">
+            <h3>Nuovo Appuntamento</h3>
+            <form id="appointmentForm">
+                <div class="form-group">
+                    <label for="clientSelect">Cliente</label>
+                    <select id="clientSelect">
+                        <option value="">Seleziona cliente</option>
+                        <option value="1">Maria Bianchi</option>
+                        <option value="2">Luigi Verdi</option>
+                        <option value="3">Anna Neri</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="serviceSelect">Servizio</label>
+                    <select id="serviceSelect">
+                        <option value="">Seleziona servizio</option>
+                        <option value="taglio">Taglio (€25)</option>
+                        <option value="piega">Piega (€20)</option>
+                        <option value="colore">Colore (€60)</option>
+                        <option value="barba">Barba (€15)</option>
+                        <option value="trattamento">Trattamento Viso (€40)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="appointmentDate">Data</label>
+                    <input type="date" id="appointmentDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="appointmentTime">Ora</label>
+                    <input type="time" id="appointmentTime" required>
+                </div>
+                <div class="form-group">
+                    <label for="appointmentNotes">Note</label>
+                    <textarea id="appointmentNotes" rows="3" placeholder="Note aggiuntive..."></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="submit" class="btn-primary">Salva Appuntamento</button>
+                    <button type="button" class="btn-secondary" id="cancelAppointmentBtn">Annulla</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal" id="newClientModal">
+        <div class="modal-content">
+            <h3>Nuovo Cliente</h3>
+            <form id="clientForm">
+                <div class="form-group">
+                    <label for="clientName">Nome</label>
+                    <input type="text" id="clientName" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="clientSurname">Cognome</label>
+                    <input type="text" id="clientSurname" name="surname" required>
+                </div>
+                <div class="form-group">
+                    <label for="clientPhone">Telefono</label>
+                    <input type="tel" id="clientPhone" name="phone" required>
+                </div>
+                <div class="form-group">
+                    <label for="clientEmail">Email</label>
+                    <input type="email" id="clientEmail" name="email">
+                </div>
+                <div class="form-group">
+                    <label for="clientNotes">Note</label>
+                    <textarea id="clientNotes" name="notes" rows="3" placeholder="Preferenze, allergie, note..."></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="submit" class="btn-primary">Salva Cliente</button>
+                    <button type="button" class="btn-secondary" id="cancelClientBtn">Annulla</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="notification" id="notification">
+        <span id="notificationText"></span>
+    </div>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <script>
+        // Inizializza Lucide dopo che il DOM è caricato.
+        document.addEventListener('DOMContentLoaded', function() {
+            lucide.createIcons();
+        });
+    </script>
+    <script src="static/script.js" defer></script>
+</body>
+</html>
