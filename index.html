@@ -4,7 +4,418 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BeautyBooker - Gestione Appuntamenti</title>
-    <link rel="stylesheet" href="static/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/umd/lucide.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 20px 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: #667eea;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: #666;
+        }
+
+        .plan-badge {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 30px;
+            align-items: start;
+        }
+
+        .sidebar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar h3 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 15px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 8px;
+            color: #666;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            transform: translateX(5px);
+        }
+        
+        .content-section {
+            display: none;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stats-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        .stats-number {
+            font-size: 36px;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .stats-label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .quick-actions h3 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+        
+        .action-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            margin-bottom: 10px;
+            font-size: 14px;
+            font-weight: bold;
+            transition: transform 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .appointments-today h3, .appointments-selected-day h3 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+        
+        .appointment-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s;
+        }
+        
+        .appointment-item:hover {
+            transform: translateY(-2px);
+        }
+        
+        .appointment-info h4 {
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .appointment-info p {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .appointment-status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .status-confirmed { background: #d4edda; color: #155724; }
+        .status-pending { background: #fff3cd; color: #856404; }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .calendar-header h2 {
+            color: #667eea;
+            font-size: 24px;
+        }
+
+        .calendar-nav {
+            display: flex;
+            gap: 10px;
+        }
+
+        .calendar-nav button {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .calendar-nav button:hover { transform: scale(1.05); }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+        }
+
+        .calendar-days div {
+            text-align: center;
+            padding: 8px;
+            font-weight: bold;
+            color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 8px;
+        }
+
+        .calendar-date {
+            text-align: center;
+            padding: 15px 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-height: 80px;
+            position: relative;
+        }
+
+        .calendar-date:hover {
+            background: rgba(102, 126, 234, 0.1);
+            transform: scale(1.05);
+        }
+
+        .calendar-date.other-month { opacity: 0.4; }
+        .calendar-date.today { background: #ff6b6b; color: white; }
+        .calendar-date.selected { box-shadow: 0 0 0 3px #667eea; }
+
+        .appointment-indicator {
+            width: 6px;
+            height: 6px;
+            background: #667eea;
+            border-radius: 50%;
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .today .appointment-indicator { background: white; }
+
+        .appointments-selected-day {
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: 15px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal.active { display: flex; }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal h3 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .form-group { margin-bottom: 20px; }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #eee;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #666;
+            border: 2px solid #eee;
+            padding: 12px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #28a745;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: none;
+            z-index: 1001;
+            transform: translateX(120%);
+            transition: transform 0.5s ease-in-out;
+        }
+        
+        .notification.show { transform: translateX(0); }
+
+        .chart-container {
+            position: relative;
+            height: 40vh;
+            width: 100%;
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            .sidebar {
+                display: flex;
+                flex-direction: row;
+                overflow-x: auto;
+                padding: 15px;
+            }
+             .sidebar h3 { display: none; }
+            .nav-item { flex-shrink: 0; }
+        }
+         @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 15px;
+            }
+             .container { padding: 10px; }
+         }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -26,142 +437,121 @@
                 <nav id="main-nav">
                     <div class="nav-item active" data-section="dashboard">
                         <i data-lucide="home"></i>
-                        Dashboard
+                        <span>Dashboard</span>
                     </div>
                     <div class="nav-item" data-section="calendar">
                         <i data-lucide="calendar"></i>
-                        Calendario
+                        <span>Calendario</span>
                     </div>
                     <div class="nav-item" data-section="clients">
                         <i data-lucide="users"></i>
-                        Clienti
+                        <span>Clienti</span>
                     </div>
                     <div class="nav-item" data-section="services">
                         <i data-lucide="scissors"></i>
-                        Servizi
+                         <span>Servizi</span>
                     </div>
-            
                     <div class="nav-item" data-section="reports">
                         <i data-lucide="bar-chart"></i>
-                        Report
+                        <span>Report</span>
                     </div>
                     <div class="nav-item" data-section="settings">
                         <i data-lucide="settings"></i>
-                        Impostazioni
+                        <span>Impostazioni</span>
                     </div>
                 </nav>
             </aside>
 
-            <section id="dashboard-section" class="content-section active">
-    <div class="dashboard-grid">
-        <div class="stats-card">
-            <div class="stats-number">12</div>
-            <div class="stats-label">Appuntamenti Oggi</div>
-        </div>
-        <div class="stats-card">
-            <div class="stats-number">€485</div>
-            <div class="stats-label">Incasso Giornaliero</div>
-        </div>
-        <div class="quick-actions">
-            <h3>Azioni Rapide</h3>
-
-            <button id="newAppointmentBtn" class="action-btn">
-                            <i data-lucide="plus"></i> Nuovo Appuntamento
-                        </button>
-            <button class="action-btn" id="showNewClientModalBtn"><i data-lucide="user-plus"></i> Nuovo Cliente</button>
-        </div>
-        </div>
-    <div class="appointments-today">
-        <h3>Appuntamenti di Oggi</h3>
-        <div id="appointments-list">
-        </div>
-    </div>
-</section>
-
-            <section id="calendar-section" class="content-section">
-                <div class="calendar-header">
-                    <h2 id="currentMonthYear"></h2>
-                    <div class="calendar-nav">
-                        <button id="prevMonthBtn"><i data-lucide="chevron-left"></i></button>
-                        <button id="nextMonthBtn"><i data-lucide="chevron-right"></i></button>
-                       
-                        <div class="dashboard-grid">
-                        <button id="newAppointmentBtn" class="action-btn">
-                            <i data-lucide="plus"></i> Nuovo Appuntamento
-                        </button>
-                          </div>
+            <div class="content-wrapper">
+                <section id="dashboard-section" class="content-section active">
+                    <div class="dashboard-grid">
+                        <div class="stats-card">
+                            <div class="stats-number" id="today-app-count">0</div>
+                            <div class="stats-label">Appuntamenti Oggi</div>
+                        </div>
+                        <div class="stats-card">
+                            <div class="stats-number" id="today-revenue">€0</div>
+                            <div class="stats-label">Incasso Giornaliero</div>
+                        </div>
+                        <div class="quick-actions">
+                             <h3>Azioni Rapide</h3>
+                            <button class="action-btn new-appointment-btn">
+                                <i data-lucide="plus"></i> Nuovo Appuntamento
+                            </button>
+                            <button class="action-btn" id="showNewClientModalBtn">
+                                <i data-lucide="user-plus"></i> Nuovo Cliente
+                            </button>
+                        </div>
                     </div>
-                </div>
-                <div class="calendar-grid calendar-days">
-                    <div>Lun</div><div>Mar</div><div>Mer</div><div>Gio</div><div>Ven</div><div>Sab</div><div>Dom</div>
-                </div>
-                <div class="calendar-grid" id="calendar-dates">
+                    <div class="appointments-today">
+                        <h3>Appuntamenti di Oggi</h3>
+                        <div id="appointments-list"></div>
                     </div>
-                <div class="appointments-selected-day">
-                    <h3 id="selectedDayAppointmentsTitle">Appuntamenti del Giorno Selezionato</h3>
-                    <div id="selectedDayAppointmentsList">
-                        <p>Clicca su un giorno nel calendario per vedere gli appuntamenti.</p>
+                </section>
+    
+                <section id="calendar-section" class="content-section">
+                    <div class="calendar-header">
+                        <h2 id="currentMonthYear"></h2>
+                        <div class="calendar-nav">
+                            <button id="prevMonthBtn"><i data-lucide="chevron-left"></i></button>
+                            <button id="nextMonthBtn"><i data-lucide="chevron-right"></i></button>
+                            <button class="action-btn new-appointment-btn">
+                                <i data-lucide="plus"></i> Nuovo Appuntamento
+                            </button>
+                        </div>
                     </div>
-                </div>
-            </section>
-
-            <section id="clients-section" class="content-section">
-                <h2>Gestione Clienti</h2>
-                </section>
-
-            <section id="services-section" class="content-section">
-                <h2>Gestione Servizi</h2>
-
-                <div class="quick-actions">
-            <h3>Azioni Servizi</h3>
-            <button class="action-btn" id="showNewClientModalBtn"><i data-lucide="plus"></i> Nuovo Servizio</button>
-            <button class="action-btn" id="sendReminderBtn"><i data-lucide="edit"></i> Modifica Servizio</button>
-            <button class="action-btn" id="showBookingLinkBtn"><i data-lucide="trash-2"></i> Elimina Servizio</button>
-        </div>
-
-                </section>
-
-            <section id="reminders-section" class="content-section">
-                <h2>Promemoria</h2>
-                </section>
-
-              <section id="reports-section" class="content-section">
-                <h2>Report e Statistiche</h2>
-                <div class="chart-container">
-                    <h3>Incassi Giornalieri e Mensili</h3>
-                    <div class="chart-wrapper"> <canvas id="revenueChart"></canvas>
+                    <div class="calendar-grid calendar-days">
+                        <div>Lun</div><div>Mar</div><div>Mer</div><div>Gio</div><div>Ven</div><div>Sab</div><div>Dom</div>
                     </div>
-                </div>
-            </section>
-
-            <section id="settings-section" class="content-section">
-                <h2>Impostazioni</h2>
+                    <div class="calendar-grid" id="calendar-dates"></div>
+                    <div class="appointments-selected-day">
+                        <h3 id="selectedDayAppointmentsTitle">Appuntamenti del Giorno Selezionato</h3>
+                        <div id="selectedDayAppointmentsList">
+                            <p>Clicca su un giorno nel calendario per vedere gli appuntamenti.</p>
+                        </div>
+                    </div>
                 </section>
+    
+                <section id="clients-section" class="content-section">
+                    <h2>Gestione Clienti</h2>
+                    <p>Funzionalità di gestione clienti in arrivo...</p>
+                </section>
+    
+                <section id="services-section" class="content-section">
+                    <h2>Gestione Servizi</h2>
+                     <p>Funzionalità di gestione servizi in arrivo...</p>
+                </section>
+    
+                <section id="reports-section" class="content-section">
+                    <h2>Report e Statistiche</h2>
+                    <div class="chart-container">
+                        <h3>Incassi Mensili (Ultimi 6 Mesi)</h3>
+                        <canvas id="revenueChart"></canvas>
+                    </div>
+                </section>
+    
+                <section id="settings-section" class="content-section">
+                    <h2>Impostazioni</h2>
+                     <p>Funzionalità impostazioni in arrivo...</p>
+                </section>
+            </div>
         </main>
     </div>
 
-     <div class="modal" id="newAppointmentModal">
+    <div class="modal" id="newAppointmentModal">
         <div class="modal-content">
             <h3>Nuovo Appuntamento</h3>
             <form id="appointmentForm">
                 <div class="form-group">
                     <label for="clientSelect">Cliente</label>
-                    <select id="clientSelect">
+                    <select id="clientSelect" required>
                         <option value="">Seleziona cliente</option>
-                        <option value="1">Maria Bianchi</option>
-                        <option value="2">Luigi Verdi</option>
-                        <option value="3">Anna Neri</option>
                     </select>
                 </div>
                 <div class="form-group">
                     <label for="serviceSelect">Servizio</label>
-                    <select id="serviceSelect">
+                    <select id="serviceSelect" required>
                         <option value="">Seleziona servizio</option>
-                        <option value="taglio">Taglio (€25)</option>
-                        <option value="piega">Piega (€20)</option>
-                        <option value="colore">Colore (€60)</option>
-                        <option value="barba">Barba (€15)</option>
-                        <option value="trattamento">Trattamento Viso (€40)</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -190,23 +580,23 @@
             <form id="clientForm">
                 <div class="form-group">
                     <label for="clientName">Nome</label>
-                    <input type="text" id="clientName" name="name" required>
+                    <input type="text" id="clientName" required>
                 </div>
                 <div class="form-group">
                     <label for="clientSurname">Cognome</label>
-                    <input type="text" id="clientSurname" name="surname" required>
+                    <input type="text" id="clientSurname" required>
                 </div>
                 <div class="form-group">
                     <label for="clientPhone">Telefono</label>
-                    <input type="tel" id="clientPhone" name="phone" required>
+                    <input type="tel" id="clientPhone" required>
                 </div>
                 <div class="form-group">
                     <label for="clientEmail">Email</label>
-                    <input type="email" id="clientEmail" name="email">
+                    <input type="email" id="clientEmail">
                 </div>
                 <div class="form-group">
                     <label for="clientNotes">Note</label>
-                    <textarea id="clientNotes" name="notes" rows="3" placeholder="Preferenze, allergie, note..."></textarea>
+                    <textarea id="clientNotes" rows="3" placeholder="Preferenze, allergie, note..."></textarea>
                 </div>
                 <div class="modal-actions">
                     <button type="submit" class="btn-primary">Salva Cliente</button>
@@ -220,13 +610,352 @@
         <span id="notificationText"></span>
     </div>
 
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <script>
-        // Inizializza Lucide dopo che il DOM è caricato.
-        document.addEventListener('DOMContentLoaded', function() {
-            lucide.createIcons();
-        });
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- DATA ---
+        let appointments = [
+            { id: 1, clientId: 1, serviceId: 1, date: '2025-07-26', time: '09:00', status: 'confirmed', notes: '' },
+            { id: 2, clientId: 2, serviceId: 4, date: '2025-07-26', time: '10:30', status: 'pending', notes: '' },
+            { id: 3, clientId: 3, serviceId: 5, date: '2025-07-26', time: '14:00', status: 'confirmed', notes: 'Primo appuntamento' },
+            { id: 4, clientId: 1, serviceId: 2, date: '2025-07-28', time: '11:00', status: 'confirmed', notes: '' },
+        ];
+
+        let clients = [
+            { id: 1, name: 'Maria', surname: 'Bianchi', phone: '333-1234567', email: 'maria@email.com' },
+            { id: 2, name: 'Luigi', surname: 'Verdi', phone: '333-9876543', email: 'luigi@email.com' },
+            { id: 3, name: 'Anna', surname: 'Neri', phone: '333-5555555', email: 'anna@email.com' }
+        ];
+        
+        let services = [
+            { id: 1, name: 'Taglio e Piega', price: 45 },
+            { id: 2, name: 'Piega', price: 20 },
+            { id: 3, name: 'Colore', price: 60 },
+            { id: 4, name: 'Barba e Baffi', price: 15 },
+            { id: 5, name: 'Trattamento Viso', price: 40 }
+        ];
+
+        // --- STATE ---
+        let currentDate = new Date();
+        let selectedDate = new Date();
+        
+        // --- SELECTORS ---
+        const mainNav = document.getElementById('main-nav');
+        const contentSections = document.querySelectorAll('.content-section');
+        const newAppointmentModal = document.getElementById('newAppointmentModal');
+        const newClientModal = document.getElementById('newClientModal');
+        const appointmentForm = document.getElementById('appointmentForm');
+        const clientForm = document.getElementById('clientForm');
+
+        // --- INITIALIZATION ---
+        lucide.createIcons();
+        initApp();
+
+        function initApp() {
+            setupEventListeners();
+            populateSelectOptions();
+            updateDashboard();
+            renderCalendar();
+            renderRevenueChart();
+        }
+
+        // --- EVENT LISTENERS ---
+        function setupEventListeners() {
+            mainNav.addEventListener('click', handleNavClick);
+            
+            document.querySelectorAll('.new-appointment-btn').forEach(btn => btn.addEventListener('click', () => showModal('newAppointment')));
+            document.getElementById('showNewClientModalBtn').addEventListener('click', () => showModal('newClient'));
+            
+            document.getElementById('cancelAppointmentBtn').addEventListener('click', () => hideModal('newAppointment'));
+            document.getElementById('cancelClientBtn').addEventListener('click', () => hideModal('newClient'));
+
+            newAppointmentModal.addEventListener('click', (e) => { if(e.target === newAppointmentModal) hideModal('newAppointment'); });
+            newClientModal.addEventListener('click', (e) => { if(e.target === newClientModal) hideModal('newClient'); });
+
+            appointmentForm.addEventListener('submit', handleNewAppointment);
+            clientForm.addEventListener('submit', handleNewClient);
+
+            document.getElementById('prevMonthBtn').addEventListener('click', showPreviousMonth);
+            document.getElementById('nextMonthBtn').addEventListener('click', showNextMonth);
+            
+            document.getElementById('calendar-dates').addEventListener('click', handleDateClick);
+        }
+
+        // --- NAVIGATION ---
+        function handleNavClick(e) {
+            const navItem = e.target.closest('.nav-item');
+            if (!navItem) return;
+
+            const sectionId = navItem.dataset.section;
+            showSection(sectionId);
+
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            navItem.classList.add('active');
+        }
+
+        function showSection(sectionId) {
+            contentSections.forEach(section => {
+                section.classList.toggle('active', section.id === `${sectionId}-section`);
+            });
+        }
+
+        // --- DASHBOARD ---
+        function updateDashboard() {
+            const todayStr = new Date().toISOString().split('T')[0];
+            const todayAppointments = appointments.filter(app => app.date === todayStr);
+
+            document.getElementById('today-app-count').textContent = todayAppointments.length;
+            
+            const todayRevenue = todayAppointments.reduce((sum, app) => {
+                const service = services.find(s => s.id === app.serviceId);
+                return sum + (service ? service.price : 0);
+            }, 0);
+            document.getElementById('today-revenue').textContent = `€${todayRevenue}`;
+            
+            renderAppointmentsList(todayAppointments, document.getElementById('appointments-list'), 'Nessun appuntamento per oggi.');
+        }
+
+        // --- CALENDAR ---
+        function renderCalendar() {
+            const calendarDates = document.getElementById('calendar-dates');
+            const month = currentDate.getMonth();
+            const year = currentDate.getFullYear();
+            
+            document.getElementById('currentMonthYear').textContent = `${currentDate.toLocaleString('it-IT', { month: 'long' })} ${year}`;
+            
+            calendarDates.innerHTML = '';
+            
+            const firstDayOfMonth = new Date(year, month, 1).getDay();
+            const lastDateOfMonth = new Date(year, month + 1, 0).getDate();
+
+            // Adjust for Monday-first week
+            const dayOffset = (firstDayOfMonth === 0) ? 6 : firstDayOfMonth - 1;
+
+            for (let i = 0; i < dayOffset; i++) {
+                calendarDates.appendChild(document.createElement('div'));
+            }
+
+            for (let i = 1; i <= lastDateOfMonth; i++) {
+                const dateEl = document.createElement('div');
+                dateEl.className = 'calendar-date';
+                dateEl.textContent = i;
+                dateEl.dataset.date = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+                
+                const thisDate = new Date(year, month, i);
+                if (thisDate.toDateString() === new Date().toDateString()) {
+                    dateEl.classList.add('today');
+                }
+                if (thisDate.toDateString() === selectedDate.toDateString()) {
+                    dateEl.classList.add('selected');
+                }
+
+                const appointmentsOnDate = appointments.filter(app => app.date === dateEl.dataset.date);
+                if (appointmentsOnDate.length > 0) {
+                    const indicator = document.createElement('div');
+                    indicator.className = 'appointment-indicator';
+                    dateEl.appendChild(indicator);
+                }
+
+                calendarDates.appendChild(dateEl);
+            }
+             updateSelectedDayAppointments();
+        }
+
+        function handleDateClick(e) {
+            const dateEl = e.target.closest('.calendar-date');
+            if (!dateEl || !dateEl.dataset.date) return;
+
+            selectedDate = new Date(dateEl.dataset.date + 'T00:00:00');
+            renderCalendar();
+        }
+        
+        function updateSelectedDayAppointments() {
+             const selectedDateStr = selectedDate.toISOString().split('T')[0];
+             const selectedDayAppointments = appointments.filter(app => app.date === selectedDateStr);
+             
+             document.getElementById('selectedDayAppointmentsTitle').textContent = `Appuntamenti del ${selectedDate.toLocaleDateString('it-IT')}`;
+             renderAppointmentsList(selectedDayAppointments, document.getElementById('selectedDayAppointmentsList'), 'Nessun appuntamento per questo giorno.');
+        }
+
+        function showPreviousMonth() {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            renderCalendar();
+        }
+
+        function showNextMonth() {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            renderCalendar();
+        }
+
+        // --- MODALS & FORMS ---
+        function showModal(modalName) {
+            const modal = document.getElementById(`${modalName}Modal`);
+            if (!modal) return;
+            
+            if (modalName === 'newAppointment') {
+                document.getElementById('appointmentDate').value = selectedDate.toISOString().split('T')[0];
+            }
+            modal.classList.add('active');
+        }
+
+        function hideModal(modalName) {
+            const modal = document.getElementById(`${modalName}Modal`);
+            if (modal) {
+                modal.classList.remove('active');
+            }
+        }
+
+        function populateSelectOptions() {
+            const clientSelect = document.getElementById('clientSelect');
+            clientSelect.innerHTML = '<option value="">Seleziona cliente</option>';
+            clients.forEach(c => {
+                const option = document.createElement('option');
+                option.value = c.id;
+                option.textContent = `${c.name} ${c.surname}`;
+                clientSelect.appendChild(option);
+            });
+
+            const serviceSelect = document.getElementById('serviceSelect');
+            serviceSelect.innerHTML = '<option value="">Seleziona servizio</option>';
+            services.forEach(s => {
+                const option = document.createElement('option');
+                option.value = s.id;
+                option.textContent = `${s.name} (€${s.price})`;
+                serviceSelect.appendChild(option);
+            });
+        }
+
+        function handleNewAppointment(e) {
+            e.preventDefault();
+            const newAppointment = {
+                id: appointments.length + 1,
+                clientId: parseInt(appointmentForm.clientSelect.value),
+                serviceId: parseInt(appointmentForm.serviceSelect.value),
+                date: appointmentForm.appointmentDate.value,
+                time: appointmentForm.appointmentTime.value,
+                status: 'confirmed',
+                notes: appointmentForm.appointmentNotes.value,
+            };
+
+            appointments.push(newAppointment);
+            
+            hideModal('newAppointment');
+            appointmentForm.reset();
+            showNotification('Appuntamento creato con successo!');
+            
+            updateDashboard();
+            renderCalendar();
+        }
+
+        function handleNewClient(e) {
+            e.preventDefault();
+            const newClient = {
+                id: clients.length + 1,
+                name: clientForm.clientName.value,
+                surname: clientForm.clientSurname.value,
+                phone: clientForm.clientPhone.value,
+                email: clientForm.clientEmail.value,
+            };
+            
+            clients.push(newClient);
+
+            hideModal('newClient');
+            clientForm.reset();
+            showNotification('Cliente aggiunto con successo!');
+            
+            populateSelectOptions();
+        }
+
+        // --- RENDERING HELPERS ---
+        function renderAppointmentsList(appointmentsToRender, container, emptyMessage) {
+            container.innerHTML = '';
+            if (appointmentsToRender.length === 0) {
+                container.innerHTML = `<p>${emptyMessage}</p>`;
+                return;
+            }
+
+            appointmentsToRender.sort((a, b) => a.time.localeCompare(b.time));
+
+            appointmentsToRender.forEach(app => {
+                const client = clients.find(c => c.id === app.clientId);
+                const service = services.find(s => s.id === app.serviceId);
+                
+                if (!client || !service) return;
+
+                const item = document.createElement('div');
+                item.className = 'appointment-item';
+                item.innerHTML = `
+                    <div class="appointment-info">
+                        <h4>${client.name} ${client.surname}</h4>
+                        <p>${app.time} - ${service.name}</p>
+                    </div>
+                    <span class="appointment-status status-${app.status}">${app.status === 'confirmed' ? 'Confermato' : 'In Attesa'}</span>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        // --- CHART ---
+        function renderRevenueChart() {
+            const ctx = document.getElementById('revenueChart').getContext('2d');
+            const labels = [];
+            const data = [];
+            
+            for (let i = 5; i >= 0; i--) {
+                const d = new Date();
+                d.setMonth(d.getMonth() - i);
+                labels.push(d.toLocaleString('it-IT', { month: 'long' }));
+                
+                // Dummy data for chart
+                data.push(Math.floor(Math.random() * (5000 - 2000 + 1) + 2000));
+            }
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Incasso Mensile',
+                        data: data,
+                        backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                        borderColor: 'rgba(102, 126, 234, 1)',
+                        borderWidth: 1,
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '€' + value;
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- UTILS ---
+        function showNotification(message) {
+            const notification = document.getElementById('notification');
+            const notificationText = document.getElementById('notificationText');
+            notificationText.textContent = message;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+    });
     </script>
-    <script src="static/script.js" defer></script>
 </body>
 </html>
